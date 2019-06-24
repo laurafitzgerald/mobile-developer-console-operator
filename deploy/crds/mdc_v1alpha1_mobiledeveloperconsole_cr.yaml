@@ -1,0 +1,7 @@
+apiVersion: mdc.aerogear.org/v1alpha1
+kind: MobileDeveloperConsole
+metadata:
+  name: example-mobiledeveloperconsole
+spec:
+  # Add fields here
+  size: 3
