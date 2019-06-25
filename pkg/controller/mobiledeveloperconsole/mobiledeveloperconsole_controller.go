@@ -2,12 +2,13 @@ package mobiledeveloperconsole
 
 import (
 	"context"
-
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
-
+	"github.com/aerogear/mobile-developer-console-operator/pkg/config"
+	openshiftappsv1 "github.com/openshift/api/apps/v1"
+	imagev1 "github.com/openshift/api/image/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,12 +21,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_mobiledeveloperconsole")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
+var (
+	cfg = config.New()
+	log = logf.Log.WithName("controller_mobiledeveloperconsole")
+)
 
 // Add creates a new MobileDeveloperConsole Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -52,9 +51,35 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource DeploymentConfig and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &openshiftappsv1.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource ImageStream and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &imagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource ServiceAccount and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Route and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})
@@ -77,8 +102,6 @@ type ReconcileMobileDeveloperConsole struct {
 
 // Reconcile reads that state of the cluster for a MobileDeveloperConsole object and makes changes based on the state read
 // and what is in the MobileDeveloperConsole.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -100,54 +123,195 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+	if instance.Status.Phase == mdcv1alpha1.PhaseEmpty {
+		instance.Status.Phase = mdcv1alpha1.PhaseProvision
+		err = r.client.Status().Update(context.TODO(), instance)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update MDC resource status phase", "MDC.Namespace", instance.Namespace, "MDC.Name", instance.Name)
+			return reconcile.Result{}, err
+		}
+	} else if instance.Status.Phase == mdcv1alpha1.PhaseComplete {
+		reqLogger.Info("MDC resource is already in Complete phase. Doing nothing.", "MDC.Namespace", instance.Namespace, "MDC.Name", instance.Name)
+		return reconcile.Result{}, nil
+	}
+
+	//#region ServiceAccount
+	serviceAccount, err := newMDCServiceAccount(instance)
 
 	// Set MobileDeveloperConsole instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, serviceAccount, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	// Check if this ServiceAccount already exists
+	foundServiceAccount := &corev1.ServiceAccount{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: serviceAccount.Namespace}, foundServiceAccount)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
+		err = r.client.Create(context.TODO(), serviceAccount)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region OauthProxy Service
+	oauthProxyService, err := newOauthProxyService(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Set MobileDeveloperConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, oauthProxyService, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this Service already exists
+	foundOauthProxyService := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: oauthProxyService.Name, Namespace: oauthProxyService.Namespace}, foundOauthProxyService)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service", "Service.Namespace", oauthProxyService.Namespace, "Service.Name", oauthProxyService.Name)
+		err = r.client.Create(context.TODO(), oauthProxyService)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region MDC Service
+	mdcService, err := newMDCService(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Set MobileDeveloperConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, mdcService, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this Service already exists
+	foundMDCService := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcService.Name, Namespace: mdcService.Namespace}, foundMDCService)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service", "Service.Namespace", mdcService.Namespace, "Service.Name", mdcService.Name)
+		err = r.client.Create(context.TODO(), mdcService)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region OauthProxy Route
+	oauthProxyRoute, err := newOauthProxyRoute(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Set MobileDeveloperConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, oauthProxyRoute, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this Route already exists
+	foundOauthProxyRoute := &routev1.Route{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: oauthProxyRoute.Name, Namespace: oauthProxyRoute.Namespace}, foundOauthProxyRoute)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Route", "Route.Namespace", oauthProxyRoute.Namespace, "Route.Name", oauthProxyRoute.Name)
+		err = r.client.Create(context.TODO(), oauthProxyRoute)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region OauthProxy ImageStream
+	oauthProxyImageStream, err := newOauthProxyImageStream(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Set MobileDeveloperConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, oauthProxyImageStream, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this ImageStream already exists
+	foundOauthProxyImageStream := &imagev1.ImageStream{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: foundOauthProxyImageStream.Name, Namespace: oauthProxyImageStream.Namespace}, foundOauthProxyImageStream)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new ImageStream", "ImageStream.Namespace", foundOauthProxyImageStream.Namespace, "ImageStream.Name", oauthProxyImageStream.Name)
+		err = r.client.Create(context.TODO(), oauthProxyImageStream)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region MDC ImageStream
+	mdcImageStream, err := newMDCImageStream(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Set MobileDeveloperConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, mdcImageStream, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this ImageStream already exists
+	foundMDCImageStream := &imagev1.ImageStream{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcImageStream.Name, Namespace: mdcImageStream.Namespace}, foundMDCImageStream)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new ImageStream", "ImageStream.Namespace", mdcImageStream.Namespace, "ImageStream.Name", mdcImageStream.Name)
+		err = r.client.Create(context.TODO(), mdcImageStream)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region MDC DeploymentConfig
+	mdcDeploymentConfig, err := newMDCDeploymentConfig(instance)
+
+	if err := controllerutil.SetControllerReference(instance, mdcDeploymentConfig, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this DeploymentConfig already exists
+	foundMDCDeploymentConfig := &openshiftappsv1.DeploymentConfig{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcDeploymentConfig.Name, Namespace: mdcDeploymentConfig.Namespace}, foundMDCDeploymentConfig)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new DeploymentConfig", "DeploymentConfig.Namespace", mdcDeploymentConfig.Namespace, "DeploymentConfig.Name", mdcDeploymentConfig.Name)
+		err = r.client.Create(context.TODO(), mdcDeploymentConfig)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully - don't requeue
+		// DeploymentConfig created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
+	//#endregion
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	if foundMDCDeploymentConfig.Status.ReadyReplicas > 0 && instance.Status.Phase != mdcv1alpha1.PhaseComplete {
+		instance.Status.Phase = mdcv1alpha1.PhaseComplete
+		r.client.Status().Update(context.TODO(), instance)
+	}
+
+	// Resources already exist - don't requeue
+	reqLogger.Info("Skip reconcile: Resources already exist")
 	return reconcile.Result{}, nil
-}
-
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *mdcv1alpha1.MobileDeveloperConsole) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
 }
