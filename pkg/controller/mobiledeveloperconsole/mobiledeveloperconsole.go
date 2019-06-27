@@ -68,7 +68,7 @@ func newMDCService(cr *mdcv1alpha1.MobileDeveloperConsole) (*corev1.Service, err
 					Port:     80,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.Int,
-						IntVal: 8080,
+						IntVal: 4000,
 					},
 				},
 			},
@@ -143,7 +143,7 @@ func newMDCImageStream(cr *mdcv1alpha1.MobileDeveloperConsole) (*imagev1.ImageSt
 func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshiftappsv1.DeploymentConfig, error) {
 	labels := map[string]string{
 		"app":     cr.Name,
-		"service": "ups",
+		"service": "mdc",
 	}
 
 	cookieSecret, err := util.GeneratePassword()
@@ -216,7 +216,7 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 								{
 									Name:          cfg.MDCContainerName,
 									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: 8080,
+									ContainerPort: 4000,
 								},
 							},
 						},
@@ -234,7 +234,7 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 							Args: []string{
 								"--provider=openshift",
 								fmt.Sprintf("--openshift-service-account=%s", cr.Name),
-								"--upstream=http://localhost:8080",
+								"--upstream=http://localhost:4000",
 								"--http-address=0.0.0.0:4180",
 								"--skip-auth-regex=/rest/sender,/rest/registry/device,/rest/prometheus/metrics,/rest/auth/config",
 								"--https-address=",
