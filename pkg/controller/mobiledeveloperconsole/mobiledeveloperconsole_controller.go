@@ -245,7 +245,7 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 
 	// Check if this ImageStream already exists
 	foundOauthProxyImageStream := &imagev1.ImageStream{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: foundOauthProxyImageStream.Name, Namespace: oauthProxyImageStream.Namespace}, foundOauthProxyImageStream)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: oauthProxyImageStream.Name, Namespace: oauthProxyImageStream.Namespace}, foundOauthProxyImageStream)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ImageStream", "ImageStream.Namespace", foundOauthProxyImageStream.Namespace, "ImageStream.Name", oauthProxyImageStream.Name)
 		err = r.client.Create(context.TODO(), oauthProxyImageStream)
