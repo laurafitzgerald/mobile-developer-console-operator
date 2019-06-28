@@ -130,9 +130,6 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 			reqLogger.Error(err, "Failed to update MDC resource status phase", "MDC.Namespace", instance.Namespace, "MDC.Name", instance.Name)
 			return reconcile.Result{}, err
 		}
-	} else if instance.Status.Phase == mdcv1alpha1.PhaseComplete {
-		reqLogger.Info("MDC resource is already in Complete phase. Doing nothing.", "MDC.Namespace", instance.Namespace, "MDC.Name", instance.Name)
-		return reconcile.Result{}, nil
 	}
 
 	//#region ServiceAccount
