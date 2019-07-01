@@ -1,4 +1,4 @@
-NAMESPACE=mdc
+NAMESPACE=mobile-developer-console
 CODE_COMPILE_OUTPUT = build/_output/bin/mobile-developer-console-operator
 TEST_COMPILE_OUTPUT = build/_output/bin/mobile-developer-console-operator-test
 
