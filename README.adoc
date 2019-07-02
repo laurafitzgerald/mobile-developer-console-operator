@@ -1,0 +1,193 @@
+:toc:
+:toc-placement!:
+
+// gEmoji for admonitions, see
+// https://gist.github.com/dcode/0cfbf2699a1fe9b46ff04c41721dda74#admonitions
+ifdef::env-github[]
+:status:
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+// Links (alphabetical order)
+:apache_license: http://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0]
+:application_monitoring_operator: https://github.com/integr8ly/application-monitoring-operator[application-monitoring-operator]
+:export_policy: https://aerogear.org/legal/export.html[AeroGear Export Policy]
+:aerogear_freenode: irc://irc.freenode.net/aerogear[#aerogear on FreeNode IRC]
+:aerogear_jira: https://issues.jboss.org/projects/AEROGEAR/issues[AeroGear on JBoss Jira]
+:aerogear_matrix: https://matrix.to/#/!IipcvbGVqkiTUQauSC:matrix.org[#aerogear:matrix.org on Matrix]
+:mailing_list: https://groups.google.com/forum/#!forum/aerogear[Google Groups Mailing List]
+:minishift: https://github.com/minishift/minishift[Minishift]
+:rh_product_security: https://access.redhat.com/security/team/contact[Red Hat Product Security team]
+:minishift_cors: https://github.com/aerogear/mobile-developer-console#enable-cors-in-the-openshift-cluster[steps]
+
+= Mobile Developer Console Operator
+
+ifdef::status[]
+.*Project health*
+image:https://travis-ci.com/aerogear/mobile-developer-console-operator.svg?branch=master[Build Status (Travis), link=https://travis-ci.com/aerogear/mobile-developer-console-operator.svg?branch=master]
+image:https://img.shields.io/:license-Apache2-blue.svg[License (License), link=http://www.apache.org/licenses/LICENSE-2.0]
+endif::[]
+
+
+The Mobile Developer Console Operator for Kubernetes provides an easy way to
+install and manage an AeroGear Mobile Developer Console Operator on Kubernetes.
+
+toc::[]
+
+
+== Limitations
+
+// https://issues.jboss.org/browse/AEROGEAR-9162
+[NOTE]
+====
+This operator currently only works on OpenShift. This is because it
+provisions `Route`s and also relies on the fact that OpenShift
+provides an OAuth server. In future we aim to make it work on vanilla
+Kubernetes also.
+====
+
+== Minishift Pre-requisites
+
+. Enable CORS addon on Minishift
+
+Follow these {minishift_cors} in order to enable CORS on Minishift.
+
+....
+ if minishift addons list | grep cors ; then	
+    minishift addons apply cors	
+else	
+    MINISHIFT_ADDONS_PATH=/tmp/minishift-addons	
+    rm -rf $MINISHIFT_ADDONS_PATH && git clone https://github.com/minishift/minishift-addons.git $MINISHIFT_ADDONS_PATH	
+    # Not needed after https://github.com/minishift/minishift-addons/pull/187 is merged	
+    cd $MINISHIFT_ADDONS_PATH	
+    git fetch origin pull/187/head:cors-fix && git checkout cors-fix	
+    minishift addons install /tmp/minishift-addons/add-ons/cors	
+    minishift addons apply cors	
+fi	
+minishift addon apply cors
+....
+
+. Export required OPENSHIFT_HOST variable
+....
+export OPENSHIFT_HOST=$(minishift ip)
+....
+
+== Installation
+
+As a user with admin permissions, you can easily install the
+mobile-security-service-operator in your OpenShift cluster as follows:
+
+....
+make cluster/prepare
+make install
+....
+
+
+== TODO
+
+Please take the following steps manually for now after the above install steps
+
+```
+AFTER WORK - things that aren't done by the operator yet.
+ MDC_ROUTE=$(oc -n mobile-developer-console get route example-mdc-mdc-proxy --template "{{.spec.host}}")
+ cat <<EOF | oc apply -f -
+apiVersion: v1
+grantMethod: auto
+kind: OAuthClient
+metadata:
+  name: mobile-developer-console
+secret: SECRETPLACEHOLDER
+redirectURIs: ["https://${MDC_ROUTE}"]
+EOF
+ # needed to make the MDC server side SA to list/watch/etc some resources in all namespaces
+oc create clusterrole mobileclient-admin --verb=create,delete,get,list,patch,update,watch --resource=mobileclients,secrets,configmaps
+oc adm policy add-cluster-role-to-user mobileclient-admin system:serviceaccount:mobile-developer-console:example-mdc
+ # not sure if we need the same things for keycloakrealms, mobilesecurityserviceapps
+ oc rollout latest example-mdc
+```
+
+== Getting help
+
+All AeroGear projects use the same communication channels.
+
+*Issue tracker*
+
+Our main issue tracker is {aerogear_jira}. Issues may also be created
+here on GitHub for individual projects.
+
+*Chat*
+
+For synchronous real-time chat, we use Matrix/IRC. These are bridged
+together, so you can choose which is more convenient for you:
+{aerogear_matrix} or {aerogear_freenode}.
+
+*Discussion list*
+
+For important conversations, we discuss asynchronously on this
+{mailing_list}. This is great for discussions that should involve many
+people in different time zones, and allows us to easily link back to
+conversations in future.
+
+== Development
+
+=== Prerequisites
+
+- Access to an OpenShift cluster with admin privileges to be able to
+  create Roles.  {minishift} is suggested.
+
+- Go, Make, dep, operator-sdk, kubectl (kubectl can just be a symlink
+  to oc)
+
+=== Running the operator
+
+1. Prepare the operator project:
+
+....
+make cluster/prepare
+....
+
+2. Run the operator (locally, not in OpenShift):
+
+....
+make code/run
+....
+
+3. Create a Mobile Developer Console instance (in another terminal):
+
+....
+make install
+....
+
+4. Watch the status of your Mobile Developer Console instance provisioning (optional):
+
+....
+watch -n1 "kubectl get po -n mobile-developer-console && echo '' && kubectl get mdc -o yaml -n mobile-developer-console"
+....
+
+5. If you want to be able to work with resources that require the
+local instance of your operator to be able to talk to the MDC instance
+in the cluster, then you'll need to make a corresponding domain name
+available locally. Something like the following should work, by adding
+an entry to /etc/hosts for the example Service that's created, then
+forwarding the port from the relevant Pod in the cluster to the local
+machine. Run this in a separate terminal, and ctrl+c to clean it up
+when finished:
+
+6. When finished, clean up:
+....
+make cluster/clean
+....
+
+== Security Response
+
+If you've found a security issue that you'd like to disclose
+confidentially please contact the {rh_product_security}.
+
+== Legal
+
+The Mobile Developer Console Operator is licensed under the {apache_license}
+License, and is subject to the {export_policy}.

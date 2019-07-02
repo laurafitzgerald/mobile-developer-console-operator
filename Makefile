@@ -2,6 +2,11 @@ NAMESPACE=mobile-developer-console
 CODE_COMPILE_OUTPUT = build/_output/bin/mobile-developer-console-operator
 TEST_COMPILE_OUTPUT = build/_output/bin/mobile-developer-console-operator-test
 
+QUAY_ORG=aerogear
+QUAY_IMAGE=mobile-developer-console-operator
+DEV_TAG=dev
+
+
 .PHONY: setup/travis
 setup/travis:
 	@echo Installing dep
@@ -52,10 +57,39 @@ cluster/prepare:
 
 .PHONY: cluster/clean
 cluster/clean:
-	-kubectl delete -n $(NAMESPACE) MobileDeveloperConsole --all
+	make uninstall
 	-kubectl delete -f deploy/role.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/service_account.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobileclient_crd.yaml
 	-kubectl delete namespace $(NAMESPACE)
+
+
+.PHONY: install
+install:
+	-kubectl apply -n $(NAMESPACE) -f deploy/operator.yaml
+	-kubectl apply -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml
+
+.PHONY: uninstall
+uninstall:
+	-kubectl delete -n $(NAMESPACE) MobileDeveloperConsole --all
+
+
+.PHONY: image/build/master
+image/build/master:
+	operator-sdk build quay.io/${QUAY_ORG}/${QUAY_IMAGE}:master
+
+.PHONY: image/push/master
+image/push/master:
+	docker push quay.io/${QUAY_ORG}/${QUAY_IMAGE}:master
+
+
+
+.PHONY: image/build/dev
+image/build/dev:
+	operator-sdk build quay.io/${QUAY_ORG}/${QUAY_IMAGE}:${DEV_TAG}
+
+.PHONY: image/push/dev
+image/push/dev:
+	docker push quay.io/${QUAY_ORG}/${QUAY_IMAGE}:${DEV_TAG}
