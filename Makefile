@@ -45,7 +45,7 @@ cluster/prepare:
 	-kubectl create -n $(NAMESPACE) -f deploy/role.yaml
 	-kubectl create -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl apply  -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
-	-kubectl apply  -n $(NAMESPACE) -f deploy/mobile-client-crd.yaml
+	-kubectl apply  -n $(NAMESPACE) -f deploy/crds/mdc_v1alpah1_mobileclient_crd.yaml
 
 .PHONY: cluster/clean
 cluster/clean:
@@ -54,5 +54,5 @@ cluster/clean:
 	-kubectl delete -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/service_account.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
-	-kubectl delete -n $(NAMESPACE) -f deploy/mobile-client-crd.yaml
+	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpah1_mobileclient_crd.yaml
 	-kubectl delete namespace $(NAMESPACE)
