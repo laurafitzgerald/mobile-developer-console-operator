@@ -67,7 +67,23 @@ func schema_pkg_apis_mdc_v1alpha1_MobileDeveloperConsoleSpec(ref common.Referenc
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "MobileDeveloperConsoleSpec defines the desired state of MobileDeveloperConsole",
-				Properties:  map[string]spec.Schema{},
+				Properties: map[string]spec.Schema{
+					"oAuthClientId": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OAuthClientId is the id of the OAuthClient that the OAuthProxy for this resource uses.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"oAuthClientSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OAuthClientId is the secret of the OAuthClient that the OAuthProxy for this resource uses.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"oAuthClientId", "oAuthClientSecret"},
 			},
 		},
 		Dependencies: []string{},

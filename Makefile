@@ -17,7 +17,7 @@ setup/travis:
 	@echo setup complete
 
 .PHONY: code/compile
-code/compile:
+code/compile: code/gen
 	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o=$(CODE_COMPILE_OUTPUT) ./cmd/manager/main.go
 
 .PHONY: code/run
@@ -30,6 +30,7 @@ endif
 .PHONY: code/gen
 code/gen: code/fix
 	operator-sdk generate k8s
+	operator-sdk generate openapi
 	go generate ./...
 
 .PHONY: code/fix
@@ -53,7 +54,7 @@ cluster/prepare:
 	-kubectl create -n $(NAMESPACE) -f deploy/role.yaml
 	-kubectl create -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl apply  -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
-	-kubectl apply  -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobileclient_crd.yaml
+	-kubectl apply  -n $(NAMESPACE) -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
 
 .PHONY: cluster/clean
 cluster/clean:
@@ -62,7 +63,7 @@ cluster/clean:
 	-kubectl delete -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/service_account.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
-	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobileclient_crd.yaml
+	-kubectl delete -n $(NAMESPACE) -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
 	-kubectl delete namespace $(NAMESPACE)
 
 

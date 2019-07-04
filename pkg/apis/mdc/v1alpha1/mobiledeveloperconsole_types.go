@@ -10,9 +10,11 @@ import (
 // MobileDeveloperConsoleSpec defines the desired state of MobileDeveloperConsole
 // +k8s:openapi-gen=true
 type MobileDeveloperConsoleSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
+	// OAuthClientId is the id of the OAuthClient that the OAuthProxy for this resource uses.
+	OAuthClientId string `json:"oAuthClientId"`
+
+	// OAuthClientId is the secret of the OAuthClient that the OAuthProxy for this resource uses.
+	OAuthClientSecret string `json:"oAuthClientSecret"`
 }
 
 // MobileDeveloperConsoleStatus defines the observed state of MobileDeveloperConsole
@@ -25,6 +27,10 @@ type MobileDeveloperConsoleStatus struct {
 
 // MobileDeveloperConsole is the Schema for the mobiledeveloperconsoles API
 // +k8s:openapi-gen=true
+// +kubebuilder:resource:path=mobiledeveloperconsoles,shortName=mdc
+// +kubebuilder:singular=mobiledeveloperconsole
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
+// +kubebuilder:subresource:status
 type MobileDeveloperConsole struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

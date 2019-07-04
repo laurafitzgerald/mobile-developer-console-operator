@@ -12,9 +12,9 @@ spec:
     kind: MobileDeveloperConsole
     listKind: MobileDeveloperConsoleList
     plural: mobiledeveloperconsoles
-    singular: mobiledeveloperconsole
     shortNames:
-      - mdc
+    - mdc
+    singular: mobiledeveloperconsole
   scope: Namespaced
   subresources:
     status: {}
@@ -34,6 +34,18 @@ spec:
         metadata:
           type: object
         spec:
+          properties:
+            oAuthClientId:
+              description: OAuthClientId is the id of the OAuthClient that the OAuthProxy
+                for this resource uses.
+              type: string
+            oAuthClientSecret:
+              description: OAuthClientId is the secret of the OAuthClient that the
+                OAuthProxy for this resource uses.
+              type: string
+          required:
+          - oAuthClientId
+          - oAuthClientSecret
           type: object
         status:
           properties:

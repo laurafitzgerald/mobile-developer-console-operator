@@ -2,3 +2,6 @@ apiVersion: mdc.aerogear.org/v1alpha1
 kind: MobileDeveloperConsole
 metadata:
   name: example-mdc
+spec:
+  oAuthClientId: mobile-developer-console
+  oAuthClientSecret: foobar

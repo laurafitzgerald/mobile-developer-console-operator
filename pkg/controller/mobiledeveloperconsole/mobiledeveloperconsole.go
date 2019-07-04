@@ -233,8 +233,8 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 							},
 							Args: []string{
 								"--provider=openshift",
-								"--client-id=mobile-developer-console",
-								"--client-secret=SECRETPLACEHOLDER",
+								fmt.Sprintf("--client-id=%s", cr.Spec.OAuthClientId),
+								fmt.Sprintf("--client-secret=%s", cr.Spec.OAuthClientSecret),
 								"--upstream=http://localhost:4000",
 								"--http-address=0.0.0.0:4180",
 								"--skip-auth-regex=/rest/sender,/rest/registry/device,/rest/prometheus/metrics,/rest/auth/config",
