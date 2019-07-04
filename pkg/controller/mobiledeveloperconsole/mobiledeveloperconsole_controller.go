@@ -8,6 +8,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -87,6 +88,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource ClusterRoleBinding and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &rbacv1.ClusterRoleBinding{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -146,6 +156,28 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
 		err = r.client.Create(context.TODO(), serviceAccount)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+	//#endregion
+
+	//#region ClusterRoleBinding
+	clusterRoleBinding, err := newMobileClientAdminClusterRoleBinding(instance)
+
+	// Set MobileDeveloperConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, clusterRoleBinding, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this ClusterRoleBinding already exists
+	foundClusterRoleBinding := &rbacv1.ClusterRoleBinding{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: clusterRoleBinding.Name}, foundClusterRoleBinding)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new clusterRoleBinding", "ClusterRoleBinding.Namespace", clusterRoleBinding.Namespace, "ClusterRoleBinding.Name", clusterRoleBinding.Name)
+		err = r.client.Create(context.TODO(), clusterRoleBinding)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

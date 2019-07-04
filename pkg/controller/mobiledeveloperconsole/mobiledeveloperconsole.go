@@ -11,6 +11,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -246,6 +247,27 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 						},
 					},
 				},
+			},
+		},
+	}, nil
+}
+
+func newMobileClientAdminClusterRoleBinding(cr *mdcv1alpha1.MobileDeveloperConsole) (*rbacv1.ClusterRoleBinding, error) {
+	return &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      cr.Namespace + "-" + cr.Name + "-mobileclient-admin",
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.GroupName,
+			Kind:     "ClusterRole",
+			Name:     "mobileclient-admin",
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      rbacv1.ServiceAccountKind,
+				Name:      cr.Name,
+				Namespace: cr.Namespace,
 			},
 		},
 	}, nil
