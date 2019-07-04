@@ -48,13 +48,13 @@ test/compile:
 
 .PHONY: cluster/prepare
 cluster/prepare:
-	-kubectl create -f deploy/clusterrole.yaml
-	-kubectl create -f deploy/role.yaml
-	-kubectl apply  -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
 	-kubectl create namespace $(NAMESPACE)
 	-kubectl label namespace $(NAMESPACE) monitoring-key=middleware
 	-kubectl create -n $(NAMESPACE) -f deploy/service_account.yaml
+	-kubectl create -n $(NAMESPACE) -f deploy/role.yaml
+	-kubectl create -n $(NAMESPACE) -f deploy/clusterrole.yaml
 	-kubectl create -n $(NAMESPACE) -f deploy/role_binding.yaml
+	-kubectl apply  -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
 	-kubectl apply  -n $(NAMESPACE) -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
 
 .PHONY: cluster/clean
@@ -62,10 +62,10 @@ cluster/clean:
 	make uninstall
 	-kubectl delete -f deploy/role.yaml
 	-kubectl delete -f deploy/clusterrole.yaml
-	-kubectl delete -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
-	-kubectl delete -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/service_account.yaml
+	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
+	-kubectl delete -n $(NAMESPACE) -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
 	-kubectl delete namespace $(NAMESPACE)
 
 
