@@ -10,10 +10,12 @@ import (
 // MobileDeveloperConsoleSpec defines the desired state of MobileDeveloperConsole
 // +k8s:openapi-gen=true
 type MobileDeveloperConsoleSpec struct {
-	// OAuthClientId is the id of the OAuthClient that the OAuthProxy for this resource uses.
+	// OAuthClientId is the id of the OAuthClient to use when protecting the Mobile Developer Console
+	// instance with OpenShift OAuth Proxy.
 	OAuthClientId string `json:"oAuthClientId"`
 
-	// OAuthClientId is the secret of the OAuthClient that the OAuthProxy for this resource uses.
+	// OAuthClientSecret is the secret of the OAuthClient to use when protecting the Mobile Developer Console
+	// instance with OpenShift OAuth Proxy.
 	OAuthClientSecret string `json:"oAuthClientSecret"`
 }
 

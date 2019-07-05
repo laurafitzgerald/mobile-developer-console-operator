@@ -76,7 +76,7 @@ minishift addon apply cors
 export OPENSHIFT_HOST=https://$(minishift ip)
 ....
 
-== Installing Operator
+== Installing the Operator
 
 As a user with admin permissions, you can install the
 mobile-security-service-operator in your OpenShift cluster as follows:
@@ -85,12 +85,14 @@ mobile-security-service-operator in your OpenShift cluster as follows:
 make cluster/prepare
 
 make install-operator
+
 OPENSHIFT_HOST=https://your-openshift-host
 # or OPENSHIFT_HOST=https://$(minishift ip), as described in previous section
+
 oc set env deployment/$(oc get -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
 ....
 
-== Provisioning MDC
+== Provisioning a Mobile Developer Console instance
 
 ....
 make install-mdc
@@ -117,6 +119,138 @@ EOF
 
 oc rollout latest example-mdc
 ....
+
+== Configuration
+
+=== OpenShift Host
+
+Although it is clear for the person managing/deploying the Mobile Developer Console operator, it is not clear for the
+operator itself to get the public hostname of the OpenShift cluster. This hostname is required by the operator.
+It will then be passed to provisioned Mobile Developer Console instances. Mobile Developer Console uses this public hostname
+in its web UI to make calls to OpenShift REST API. Thus the the value given in the environment variable must be public and accessible by potential users'
+browsers. Instructions at the top of the document for enabling CORS in OpenShift is also because of the same reasons.
+
+.Environment Variables
+|===
+|Name |Default |Purpose
+
+|`OPENSHIFT_HOST`
+| None - it is required
+| Public hostname of the OpenShift cluster
+
+|===
+
+=== Image Streams
+
+The operator uses 2 image streams and what image streams to use are configurable
+with environment variables.
+
+Mobile Developer Console and OAuth proxy image stream are created within the same namespace by the operator.
+
+The following table shows the available environment variable names, along with their default values:
+
+.Environment Variables
+|===
+|Name |Default |Purpose
+
+|`MDC_IMAGE_STREAM_NAME`
+|`mdc-imagestream`
+| Name of the Mobile Developer Console image stream that will be created by the operator.
+
+|`MDC_IMAGE_STREAM_TAG`
+|`latest`
+| Tag of the Mobile Developer Console image stream that will be created by the operator.
+
+|`MDC_IMAGE_STREAM_INITIAL_IMAGE`
+|`quay.io/aerogear/mobile-developer-console:latest`
+| Initial image for the Mobile Developer Console image stream that will be created by the operator.
+
+|`OAUTH_PROXY_IMAGE_STREAM_NAME`
+|`mdc-oauth-proxy-imagestream`
+| Name of the OAuth proxy image stream that will be created by the operator.
+
+|`OAUTH_PROXY_IMAGE_STREAM_TAG`
+|`latest`
+| Tag of the OAuth proxy image stream that will be created by the operator.
+
+|`OAUTH_PROXY_IMAGE_STREAM_INITIAL_IMAGE`
+|`docker.io/openshift/oauth-proxy:v1.1.0`
+| Initial image for the OAuth proxy image stream that will be created by the operator.
+
+|===
+
+CAUTION: Re-deploying this operator with customized images will cause
+_all_ instances owned by the operator to be updated.
+
+
+=== Container Names
+
+If you would like to modify the container names, you can use the following environment variables.
+
+.Environment Variables
+|===
+|Name |Default
+
+|`MDC_CONTAINER_NAME`
+|`mdc`
+
+|`OAUTH_PROXY_CONTAINER_NAME`
+|`mdc-oauth-proxy`
+
+|===
+
+
+== Custom Resources (aka How to get value from this operator)
+
+=== MobileDeveloperConsole
+
+This is the main installation resource kind. Creation of a valid
+MobileDeveloperConsole CR will result in a functional Mobile Developer
+Console deployed to your namespace.
+
+Here are all of the configurable fields in a MobileDeveloperConsole:
+
+.MobileDeveloperConsole fields
+|===
+|Field Name |Description
+
+|oAuthClientId
+|Id of the OAuthClient to use when protecting the Mobile Developer Console
+ instance with OpenShift OAuth Proxy.
+
+|oAuthClientSecret
+|Password of the OAuthClient to use when protecting the Mobile Developer Console
+ instance with OpenShift OAuth Proxy.
+
+|===
+
+An example MobileDeveloperConsole resource is available at
+`./deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml`:
+
+.mdc_v1alpha1_mobiledeveloperconsole_cr.yaml
+[source,yaml]
+----
+apiVersion: mdc.aerogear.org/v1alpha1
+kind: MobileDeveloperConsole
+metadata:
+  name: example-mdc
+spec:
+  oAuthClientId: mobile-developer-console
+  oAuthClientSecret: foobar
+----
+
+To create this, you can run:
+
+....
+kubectl apply -n mobile-developer-console -f ./deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml
+....
+
+To see the created instance then, you can run:
+
+....
+kubectl get mdc example-mdc -n mobile-developer-console -o yaml
+....
+
 
 == Getting help
 
@@ -167,7 +301,7 @@ make code/run
 3. Create a Mobile Developer Console instance (in another terminal):
 
 ....
-make install
+make install-mdc
 ....
 
 4. Watch the status of your Mobile Developer Console instance provisioning (optional):

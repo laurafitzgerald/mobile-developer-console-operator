@@ -36,12 +36,14 @@ spec:
         spec:
           properties:
             oAuthClientId:
-              description: OAuthClientId is the id of the OAuthClient that the OAuthProxy
-                for this resource uses.
+              description: OAuthClientId is the id of the OAuthClient to use when
+                protecting the Mobile Developer Console instance with OpenShift OAuth
+                Proxy.
               type: string
             oAuthClientSecret:
-              description: OAuthClientId is the secret of the OAuthClient that the
-                OAuthProxy for this resource uses.
+              description: OAuthClientSecret is the secret of the OAuthClient to use
+                when protecting the Mobile Developer Console instance with OpenShift
+                OAuth Proxy.
               type: string
           required:
           - oAuthClientId

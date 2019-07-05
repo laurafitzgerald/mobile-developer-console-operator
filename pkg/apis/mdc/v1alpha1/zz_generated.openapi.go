@@ -70,14 +70,14 @@ func schema_pkg_apis_mdc_v1alpha1_MobileDeveloperConsoleSpec(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"oAuthClientId": {
 						SchemaProps: spec.SchemaProps{
-							Description: "OAuthClientId is the id of the OAuthClient that the OAuthProxy for this resource uses.",
+							Description: "OAuthClientId is the id of the OAuthClient to use when protecting the Mobile Developer Console instance with OpenShift OAuth Proxy.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"oAuthClientSecret": {
 						SchemaProps: spec.SchemaProps{
-							Description: "OAuthClientId is the secret of the OAuthClient that the OAuthProxy for this resource uses.",
+							Description: "OAuthClientSecret is the secret of the OAuthClient to use when protecting the Mobile Developer Console instance with OpenShift OAuth Proxy.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
