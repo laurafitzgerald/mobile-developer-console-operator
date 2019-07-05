@@ -73,33 +73,34 @@ minishift addon apply cors
 
 . Export required OPENSHIFT_HOST variable
 ....
-export OPENSHIFT_HOST=$(minishift ip)
+export OPENSHIFT_HOST=https://$(minishift ip)
 ....
 
-== Installation
+== Installing Operator
 
-As a user with admin permissions, you can easily install the
+As a user with admin permissions, you can install the
 mobile-security-service-operator in your OpenShift cluster as follows:
 
 ....
 make cluster/prepare
-make install
+
+make install-operator
 OPENSHIFT_HOST=https://your-openshift-host
-# or OPENSHIFT_HOST=$(minishift ip), as described in previous section
+# or OPENSHIFT_HOST=https://$(minishift ip), as described in previous section
 oc set env deployment/$(oc get -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
 ....
 
-
-== Post installation
-
-Once the `mobiledeveloperconsole` CR is created in `make install` above, the operator will provision a Mobile Developer Console instance.
-`make install` command above will not create the required OAuthClient on purpose as we need the Mobile Developer Console URL, which is not available
-at that time.
-
-Create the necessary OAuthClient with the following commands.
+== Provisioning MDC
 
 ....
+make install-mdc
+....
 
+Once the `mobiledeveloperconsole` CR is created with the `make install-mdc` above, the operator will provision a Mobile Developer Console instance.
+
+However, an OAuthClient needs to be created with the Mobile Developer Console URL.
+
+....
 OAUTH_CLIENT_ID=$(oc get -n mobile-developer-console -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml --template "{{.spec.oAuthClientId}}")
 OAUTH_CLIENT_SECRET=$(oc get -n mobile-developer-console -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml --template "{{.spec.oAuthClientSecret}}")
 MDC_ROUTE=$(oc -n mobile-developer-console get route example-mdc-mdc-proxy --template "{{.spec.host}}")

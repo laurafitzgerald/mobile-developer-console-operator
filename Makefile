@@ -69,9 +69,12 @@ cluster/clean:
 	-kubectl delete namespace $(NAMESPACE)
 
 
-.PHONY: install
+.PHONY: install-operator
 install:
 	-kubectl apply -n $(NAMESPACE) -f deploy/operator.yaml
+
+.PHONY: install-mdc
+install:
 	-kubectl apply -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml
 
 .PHONY: uninstall
