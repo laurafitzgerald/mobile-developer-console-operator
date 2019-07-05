@@ -84,7 +84,7 @@ mobile-security-service-operator in your OpenShift cluster as follows:
 ....
 make cluster/prepare
 make install
-oc set env deployment/$(oc get -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
+oc set env deployment/$(oc get -n mobile-developer-console -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
 ....
 
 
@@ -94,8 +94,8 @@ TODO
 
 ```
 
-OAUTH_CLIENT_ID=$(oc get -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml --template "{{.spec.oAuthClientId}}")
-OAUTH_CLIENT_SECRET=$(oc get -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml --template "{{.spec.oAuthClientSecret}}")
+OAUTH_CLIENT_ID=$(oc get -n mobile-developer-console -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml --template "{{.spec.oAuthClientId}}")
+OAUTH_CLIENT_SECRET=$(oc get -n mobile-developer-console -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml --template "{{.spec.oAuthClientSecret}}")
 MDC_ROUTE=$(oc -n mobile-developer-console get route example-mdc-mdc-proxy --template "{{.spec.host}}")
 
 cat <<EOF | oc apply -f -
