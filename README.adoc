@@ -127,7 +127,7 @@ oc rollout latest example-mdc
 Although it is clear for the person managing/deploying the Mobile Developer Console operator, it is not clear for the
 operator itself to get the public hostname of the OpenShift cluster. This hostname is required by the operator.
 It will then be passed to provisioned Mobile Developer Console instances. Mobile Developer Console uses this public hostname
-in its web UI to make calls to OpenShift REST API. Thus the the value given in the environment variable must be public and accessible by potential users'
+in its web UI to make calls to OpenShift REST API. Thus the value given in the environment variable must be public and accessible by potential users'
 browsers. Instructions at the top of the document for enabling CORS in OpenShift is also because of the same reasons.
 
 .Environment Variables
