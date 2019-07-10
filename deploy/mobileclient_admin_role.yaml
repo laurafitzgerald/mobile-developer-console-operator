@@ -34,7 +34,6 @@ rules:
       - androidvariants
       - iosvariants
       - pushapplications
-      - unifiedpushservers
     verbs:
       - create
       - delete
@@ -47,7 +46,6 @@ rules:
       - metrics.aerogear.org
     resources:
       - appmetricsconfigs
-      - appmetricsservices
     verbs:
       - create
       - delete
