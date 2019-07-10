@@ -88,8 +88,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource ClusterRoleBinding and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &rbacv1.ClusterRoleBinding{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource RoleBinding and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})
@@ -164,20 +164,20 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	}
 	//#endregion
 
-	//#region ClusterRoleBinding
-	clusterRoleBinding, err := newMobileClientAdminClusterRoleBinding(instance)
+	//#region RoleBinding
+	roleBinding, err := newMobileClientAdminRoleBinding(instance)
 
 	// Set MobileDeveloperConsole instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, clusterRoleBinding, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, roleBinding, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this ClusterRoleBinding already exists
-	foundClusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: clusterRoleBinding.Name}, foundClusterRoleBinding)
+	// Check if this RoleBinding already exists
+	foundRoleBinding := &rbacv1.RoleBinding{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: roleBinding.Name, Namespace: roleBinding.Namespace}, foundRoleBinding)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new clusterRoleBinding", "ClusterRoleBinding.Namespace", clusterRoleBinding.Namespace, "ClusterRoleBinding.Name", clusterRoleBinding.Name)
-		err = r.client.Create(context.TODO(), clusterRoleBinding)
+		reqLogger.Info("Creating a new RoleBinding", "RoleBinding.Namespace", roleBinding.Namespace, "RoleBinding.Name", roleBinding.Name)
+		err = r.client.Create(context.TODO(), roleBinding)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

@@ -74,6 +74,46 @@ rules:
 - apiGroups:
     - rbac.authorization.k8s.io
   resources:
-    - clusterrolebindings
+    - rolebindings
   verbs:
     - '*'
+- apiGroups:
+    - mobile.k8s.io
+  resources:
+    - mobileclients
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - push.aerogear.org
+  resources:
+    - androidvariants
+    - iosvariants
+    - pushapplications
+    - unifiedpushservers
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - metrics.aerogear.org
+  resources:
+    - appmetricsconfigs
+    - appmetricsservices
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch

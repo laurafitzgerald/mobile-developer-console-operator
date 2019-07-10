@@ -52,8 +52,8 @@ cluster/prepare:
 	-kubectl label namespace $(NAMESPACE) monitoring-key=middleware
 	-kubectl create -n $(NAMESPACE) -f deploy/service_account.yaml
 	-kubectl create -n $(NAMESPACE) -f deploy/role.yaml
-	-kubectl create -n $(NAMESPACE) -f deploy/clusterrole.yaml
 	-kubectl create -n $(NAMESPACE) -f deploy/role_binding.yaml
+	-kubectl create -n $(NAMESPACE) -f deploy/mobileclient_admin_role.yaml
 	-kubectl apply  -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
 	-kubectl apply  -n $(NAMESPACE) -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
 
@@ -61,8 +61,8 @@ cluster/prepare:
 cluster/clean:
 	make uninstall
 	-kubectl delete -f deploy/role.yaml
-	-kubectl delete -f deploy/clusterrole.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/role_binding.yaml
+	-kubectl delete -n $(NAMESPACE) -f deploy/mobileclient_admin_role.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/service_account.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_crd.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/mdc_v1alpha1_mobileclient_crd.yaml
@@ -70,11 +70,11 @@ cluster/clean:
 
 
 .PHONY: install-operator
-install:
+install-operator:
 	-kubectl apply -n $(NAMESPACE) -f deploy/operator.yaml
 
 .PHONY: install-mdc
-install:
+install-mdc:
 	-kubectl apply -n $(NAMESPACE) -f deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml
 
 .PHONY: uninstall

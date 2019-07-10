@@ -252,15 +252,15 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 	}, nil
 }
 
-func newMobileClientAdminClusterRoleBinding(cr *mdcv1alpha1.MobileDeveloperConsole) (*rbacv1.ClusterRoleBinding, error) {
-	return &rbacv1.ClusterRoleBinding{
+func newMobileClientAdminRoleBinding(cr *mdcv1alpha1.MobileDeveloperConsole) (*rbacv1.RoleBinding, error) {
+	return &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
 			Name:      cr.Namespace + "-" + cr.Name + "-mobileclient-admin",
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.GroupName,
-			Kind:     "ClusterRole",
+			Kind:     "Role",
 			Name:     "mobileclient-admin",
 		},
 		Subjects: []rbacv1.Subject{
