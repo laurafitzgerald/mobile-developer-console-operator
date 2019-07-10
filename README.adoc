@@ -50,6 +50,15 @@ provides an OAuth server. In future we aim to make it work on vanilla
 Kubernetes also.
 ====
 
+== Cloning the repository
+
+By the following commands you will create a local directory and clone this project.
+
+[source,shell]
+----
+$ git clone git@github.com:aerogear/mobile-developer-console-operator.git $GOPATH/src/github.com/aerogear/mobile-developer-console-operator
+----
+
 == Minishift Pre-requisites
 
 . Enable CORS addon on Minishift
