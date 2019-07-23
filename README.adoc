@@ -274,6 +274,33 @@ To see the created instance then, you can run:
 kubectl get mdc example-mdc -n mobile-developer-console -o yaml
 ....
 
+== Monitoring Service (Metrics)
+
+The application-monitoring stack provisioned by the
+https://github.com/integr8ly/application-monitoring-operator[application-monitoring-operator] on https://github.com/integr8ly[Integr8ly]
+can be used to gather metrics from this operator and the mobile security service. These metrics can be used by Integr8ly's application monitoring to generate Prometheus metrics, AlertManager alerts and a Grafana dashboard.
+
+It is required that the https://github.com/integr8ly/grafana-operator[integr8ly/Grafana] and https://github.com/coreos/prometheus-operator[Prometheus] operators are installed. For further detail see https://github.com/integr8ly/application-monitoring-operator[integr8ly/application-monitoring-operator].
+
+The following commands will enable the monitoring service where the operator has been installed in the default namespace with the make commands.
+
+[source,shell]
+----
+make monitoring/install
+----
+
+IMPORTANT: The namespaces are setup manually in the files link:./deploy/monitor/service_monitor.yaml[ServiceMonitor], link:./deploy/monitor/prometheus_rule.yaml[Prometheus Rules], link:./deploy/monitor/operator-service.yaml[Operator Service], and link:./deploy/monitor/grafana-dashboard[Grafana Dashboard]. Following an example from the link:./deploy/monitor/prometheus_rule.yaml[Prometheus Rules]. You should replace them if the operator is not installed in the default namespace.
+
+[source,yaml]
+----
+  expr: |
+          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-security-service"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-security-service"}) != 3
+
+[source,shell]
+----
+
+NOTE: The command `make monitoring/uninstall` will uninstall the Monitor Service.
+
 
 == Getting help
 

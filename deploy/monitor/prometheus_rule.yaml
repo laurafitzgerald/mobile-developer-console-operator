@@ -1,0 +1,35 @@
+# Monitor Service (Metrics)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    monitoring-key: middleware
+    prometheus: application-monitoring
+    role: alert-rules
+  name: application-monitoring
+spec:
+  selector:
+    matchLabels:
+      name: mobile-developer-console-operator
+  groups:
+    - name: general.rules
+      rules:
+      - alert: MDCOperatorDown
+        expr: absent(up{job="mobile-developer-console-operator"} == 1)
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          description: "The MDC Operator has been down for more than 5 minutes. "
+          summary: "The MDC Operator is down. For more information see on the MDC Operator https://github.com/aerogear/mobile-developer-console-operator"
+          sop_url: "https://github.com/aerogear/mobile-developer-console-operator/blob/0.1.0/SOP/SOP-operator.adoc" #todo
+      - alert: MDCPodCount
+        annotations:
+          description: "The Pod count for the MDC Server has changed in the last 5 minutes and is lower than the required minimum."
+          summary: "Pod count for namespace MDC is {{ printf '%.0f' $value }}. Expected 1 pods at least. For more information see on the MDC Operator https://github.com/aerogear/mobile-developer-console-operator"
+          sop_url: "https://github.com/aerogear/mobile-developer-console-operator/blob/0.1.0/SOP/SOP-operator.adoc" #todo
+        expr: |
+          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"}) < 1
+        for: 5m
+        labels:
+          severity: warning
