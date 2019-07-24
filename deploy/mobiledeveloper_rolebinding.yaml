@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mobile-developer-binding
+  namespace: mobile-developer-console
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mobile-developer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:authenticated

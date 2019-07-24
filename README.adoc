@@ -66,7 +66,7 @@ $ git clone git@github.com:aerogear/mobile-developer-console-operator.git $GOPAT
 Follow these {minishift_cors} in order to enable CORS on Minishift.
 
 ....
- if minishift addons list | grep cors ; then	
+if minishift addons list | grep cors ; then
     minishift addons apply cors	
 else	
     MINISHIFT_ADDONS_PATH=/tmp/minishift-addons	
@@ -77,7 +77,6 @@ else
     minishift addons install /tmp/minishift-addons/add-ons/cors	
     minishift addons apply cors	
 fi	
-minishift addon apply cors
 ....
 
 . Export required OPENSHIFT_HOST variable
@@ -98,7 +97,7 @@ make install-operator
 OPENSHIFT_HOST=https://your-openshift-host
 # or OPENSHIFT_HOST=$(minishift ip):8443, as described in previous section
 
-oc set env deployment/$(oc get -n mobile-developer-console -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
+oc set env -n mobile-developer-console deployment/$(oc get -n mobile-developer-console -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
 ....
 
 == Provisioning a Mobile Developer Console instance
