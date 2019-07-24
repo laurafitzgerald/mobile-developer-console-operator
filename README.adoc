@@ -85,7 +85,7 @@ fi
 export OPENSHIFT_HOST=$(minishift ip):8443
 ....
 
-== Remove cluster Prerequisities
+== Remote cluster Prerequisities
 
 If you are using a remote cluster, you should check {openshift_cors} 
 on how to update the CORS configurations.
