@@ -2,6 +2,7 @@ package mobiledeveloperconsole
 
 import (
 	"fmt"
+
 	"github.com/aerogear/mobile-developer-console-operator/pkg/util"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -211,6 +212,22 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 								{
 									Name:  "OPENSHIFT_HOST",
 									Value: cfg.OpenShiftHost,
+								},
+								{
+									Name:  "IDM_DOCUMENTATION_URL",
+									Value: cfg.IdentityManagementDocumentationURL,
+								},
+								{
+									Name:  "UPS_DOCUMENTATION_URL",
+									Value: cfg.UnifiedPushDocumentationURL,
+								},
+								{
+									Name:  "SYNC_DOCUMENTATION_URL",
+									Value: cfg.DataSyncDocumentationURL,
+								},
+								{
+									Name:  "MSS_DOCUMENTATION_URL",
+									Value: cfg.MobileSecurityDocumentationURL,
 								},
 							},
 							Ports: []corev1.ContainerPort{

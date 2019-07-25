@@ -145,6 +145,22 @@ browsers. Instructions at the top of the document for enabling CORS in OpenShift
 | None - it is required
 | Public hostname of the OpenShift cluster
 
+|`UPS_DOCUMENTATION_URL`
+| https://docs.aerogear.org/limited-availability/upstream/ups.html
+| Link to documentation for Unified Push service.
+
+|`IDM_DOCUMENTATION_URL`
+| https://docs.aerogear.org/limited-availability/upstream/idm.html
+| Link to documentation for Identity Management service.
+
+|`SYNC_DOCUMENTATION_URL`
+| https://docs.aerogear.org/limited-availability/upstream/sync.html
+| Link to documentation for Data Sync service.
+
+|`MSS_DOCUMENTATION_URL`
+| https://docs.aerogear.org/limited-availability/upstream/mss.html
+| Link to documentation for Mobile Security Service.
+
 |===
 
 === Image Streams

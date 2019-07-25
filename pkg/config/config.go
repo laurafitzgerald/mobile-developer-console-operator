@@ -15,6 +15,11 @@ type Config struct {
 
 	MDCImageStreamInitialImage        string
 	OauthProxyImageStreamInitialImage string
+
+	UnifiedPushDocumentationURL        string
+	IdentityManagementDocumentationURL string
+	DataSyncDocumentationURL           string
+	MobileSecurityDocumentationURL     string
 }
 
 func New() Config {
@@ -32,6 +37,12 @@ func New() Config {
 		// these are used when the image stream does not exist and created for the first time by the operator
 		MDCImageStreamInitialImage:        getEnv("MDC_IMAGE_STREAM_INITIAL_IMAGE", "quay.io/aerogear/mobile-developer-console:latest"),
 		OauthProxyImageStreamInitialImage: getEnv("OAUTH_PROXY_IMAGE_STREAM_INITIAL_IMAGE", "docker.io/openshift/oauth-proxy:v1.1.0"),
+
+		// override the default links displayed in MDC for each of the mobile services
+		UnifiedPushDocumentationURL:        getEnv("UPS_DOCUMENTATION_URL", "https://docs.aerogear.org/limited-availability/upstream/ups.html"),
+		IdentityManagementDocumentationURL: getEnv("IDM_DOCUMENTATION_URL", "https://docs.aerogear.org/limited-availability/upstream/idm.html"),
+		DataSyncDocumentationURL:           getEnv("SYNC_DOCUMENTATION_URL", "https://docs.aerogear.org/limited-availability/upstream/sync.html"),
+		MobileSecurityDocumentationURL:     getEnv("MSS_DOCUMENTATION_URL", "https://docs.aerogear.org/limited-availability/upstream/mss.html"),
 	}
 }
 

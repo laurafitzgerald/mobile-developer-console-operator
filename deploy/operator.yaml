@@ -32,3 +32,11 @@ spec:
               value: "mobile-developer-console-operator"
             - name: OPENSHIFT_HOST
               value: "${OPENSHIFT_HOST}"  # to be filled by whoever is deploying this file
+            - name: UPS_DOCUMENTATION_URL
+              value: ""
+            - name: IDM_DOCUMENTATION_URL
+              value: ""
+            - name: SYNC_DOCUMENTATION_URL
+              value: ""
+            - name: MSS_DOCUMENTATION_URL
+              value: ""
