@@ -5,7 +5,7 @@ TEST_COMPILE_OUTPUT = build/_output/bin/mobile-developer-console-operator-test
 QUAY_ORG=aerogear
 QUAY_IMAGE=mobile-developer-console-operator
 DEV_TAG ?= $(shell sh -c "git rev-parse --short HEAD")
-
+OPENSHIFT_HOST ?= $(shell minishift ip):8443
 
 .PHONY: setup/travis
 setup/travis:
@@ -76,6 +76,7 @@ cluster/clean:
 .PHONY: install-operator
 install-operator:
 	-kubectl apply -n $(NAMESPACE) -f deploy/operator.yaml
+	-kubectl set env -n $(NAMESPACE) -f deploy/operator.yaml OPENSHIFT_HOST=${OPENSHIFT_HOST}
 
 .PHONY: install-mdc
 install-mdc:
