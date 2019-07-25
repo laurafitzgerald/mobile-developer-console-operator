@@ -24,6 +24,11 @@ endif::[]
 :rh_product_security: https://access.redhat.com/security/team/contact[Red Hat Product Security team]
 :minishift_cors: https://github.com/aerogear/mobile-developer-console#enable-cors-in-the-openshift-cluster[steps]
 :openshift_cors: https://docs.openshift.com/container-platform/3.11/install_config/master_node_configuration.html#master-config-asset-config[OpenShift configuration guide]
+:integr8ly: https://github.com/integr8ly[Integr8ly]
+:grafana_operator: https://github.com/integr8ly/grafana-operator[grafana-operator]
+:prometheus_operator: https://github.com/coreos/prometheus-operator[prometheus-operator]
+:prometheus_rule_yaml: link:./deploy/monitor/prometheus_rule.yaml[prometheus_rule.yaml]
+:grafana_dashboard_yaml: link:./deploy/monitor/grafana-dashboard.yaml[grafana-dashboard.yaml]
 
 = Mobile Developer Console Operator
 
@@ -87,7 +92,7 @@ export OPENSHIFT_HOST=$(minishift ip):8443
 
 == Remote cluster Prerequisities
 
-If you are using a remote cluster, you should check {openshift_cors} 
+If you are using a remote cluster, you should check {openshift_cors}
 on how to update the CORS configurations.
 
 == Installing the Operator
@@ -277,29 +282,39 @@ kubectl get mdc example-mdc -n mobile-developer-console -o yaml
 == Monitoring Service (Metrics)
 
 The application-monitoring stack provisioned by the
-https://github.com/integr8ly/application-monitoring-operator[application-monitoring-operator] on https://github.com/integr8ly[Integr8ly]
-can be used to gather metrics from this operator and the mobile security service. These metrics can be used by Integr8ly's application monitoring to generate Prometheus metrics, AlertManager alerts and a Grafana dashboard.
+{application_monitoring_operator} on {integr8ly} can be used to gather
+metrics from this operator and the mobile developer console. These
+metrics can be used to generate alerts in AlertManager and a dashboard
+in Grafana.
 
-It is required that the https://github.com/integr8ly/grafana-operator[integr8ly/Grafana] and https://github.com/coreos/prometheus-operator[Prometheus] operators are installed. For further detail see https://github.com/integr8ly/application-monitoring-operator[integr8ly/application-monitoring-operator].
+It is required that the {grafana_operator} and {prometheus_operator
+are installed. For further details see
+{application_monitoring_operator}.
 
-The following commands will enable the monitoring service where the operator has been installed in the default namespace with the make commands.
+The following commands will add the monitoring resources to the
+`mobile-developer-console` where the operator has been installed:
 
 [source,shell]
 ----
 make monitoring/install
 ----
 
-IMPORTANT: The namespaces are setup manually in the files link:./deploy/monitor/service_monitor.yaml[ServiceMonitor], link:./deploy/monitor/prometheus_rule.yaml[Prometheus Rules], link:./deploy/monitor/operator-service.yaml[Operator Service], and link:./deploy/monitor/grafana-dashboard[Grafana Dashboard]. Following an example from the link:./deploy/monitor/prometheus_rule.yaml[Prometheus Rules]. You should replace them if the operator is not installed in the default namespace.
+IMPORTANT: The namespace name is hard-coded in the
+{prometheus_rule_yaml} and {grafana_dashboard_yaml}. The following is
+an example from the {prometheus_rule_yaml}. You should replace them if
+the operator is not installed in the `mobile-developer-console`
+namespace.
 
 [source,yaml]
 ----
   expr: |
-          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-security-service"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-security-service"}) != 3
+          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"}) != 3
 
 [source,shell]
 ----
 
-NOTE: The command `make monitoring/uninstall` will uninstall the Monitor Service.
+NOTE: The command `make monitoring/uninstall` will remove the
+monitoring resources.
 
 
 == Getting help

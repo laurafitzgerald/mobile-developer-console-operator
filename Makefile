@@ -95,20 +95,15 @@ image/push: image/build
 
 .PHONY: monitoring/install
 monitoring/install:
-@echo Installing service monitor in ${NAMESPACE} :
-- oc project ${NAMESPACE}
-- kubectl label namespace ${NAMESPACE} monitoring-key=middleware
-- kubectl create -f deploy/monitor/service_monitor.yaml
-- kubectl create -f deploy/monitor/operator_service.yaml
-- kubectl create -f deploy/monitor/prometheus_rule.yaml
-- kubectl create -f deploy/monitor/grafana_dashboard.yaml
+	@echo Installing service monitor in ${NAMESPACE} :
+	- kubectl label namespace ${NAMESPACE} monitoring-key=middleware
+	- kubectl create -n ${NAMESPACE} -f deploy/monitor/service_monitor.yaml
+	- kubectl create -n ${NAMESPACE} -f deploy/monitor/prometheus_rule.yaml
+	- kubectl create -n ${NAMESPACE} -f deploy/monitor/grafana_dashboard.yaml
 
 .PHONY: monitoring/uninstall
 monitoring/uninstall:
-@echo Uninstalling monitor service from ${NAMESPACE} :
-- oc project ${NAMESPACE}
-- kubectl delete -f deploy/monitor/service_monitor.yaml
-- kubectl delete -f deploy/monitor/operator_service.yaml
-- kubectl delete -f deploy/monitor/prometheus_rule.yaml
-- kubectl delete -f deploy/monitor/grafana_dashboard.yaml
-
+	@echo Uninstalling monitor service from ${NAMESPACE} :
+	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/service_monitor.yaml
+	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/prometheus_rule.yaml
+	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/grafana_dashboard.yaml
