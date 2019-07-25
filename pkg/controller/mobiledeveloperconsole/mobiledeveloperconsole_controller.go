@@ -52,26 +52,26 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource DeploymentConfig and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &openshiftappsv1.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to secondary resource ImageStream and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &imagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
-	})
-	if err != nil {
-		return err
-	}
-
 	// Watch for changes to secondary resource ServiceAccount and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Service and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource RoleBinding and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})
@@ -88,8 +88,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource RoleBinding and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource DeploymentConfig and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &openshiftappsv1.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource ImageStream and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &imagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})

@@ -4,8 +4,8 @@ TEST_COMPILE_OUTPUT = build/_output/bin/mobile-developer-console-operator-test
 
 QUAY_ORG=aerogear
 QUAY_IMAGE=mobile-developer-console-operator
-DEV_TAG=dev
-
+DEV_TAG ?= $(shell sh -c "git rev-parse --short HEAD")
+OPENSHIFT_HOST ?= $(shell minishift ip):8443
 
 .PHONY: setup/travis
 setup/travis:
@@ -76,6 +76,7 @@ cluster/clean:
 .PHONY: install-operator
 install-operator:
 	-kubectl apply -n $(NAMESPACE) -f deploy/operator.yaml
+	-kubectl set env -n $(NAMESPACE) -f deploy/operator.yaml OPENSHIFT_HOST=${OPENSHIFT_HOST}
 
 .PHONY: install-mdc
 install-mdc:
@@ -85,21 +86,10 @@ install-mdc:
 uninstall:
 	-kubectl delete -n $(NAMESPACE) MobileDeveloperConsole --all
 
+.PHONY: image/build
+image/build:
+	operator-sdk build quay.io/${QUAY_ORG}/${QUAY_IMAGE}:${DEV_TAG} --image-build-args "--label quay.expires-after=2w"
 
-.PHONY: image/build/master
-image/build/master:
-	operator-sdk build quay.io/${QUAY_ORG}/${QUAY_IMAGE}:master
-
-.PHONY: image/push/master
-image/push/master:
-	docker push quay.io/${QUAY_ORG}/${QUAY_IMAGE}:master
-
-
-
-.PHONY: image/build/dev
-image/build/dev:
-	operator-sdk build quay.io/${QUAY_ORG}/${QUAY_IMAGE}:${DEV_TAG}
-
-.PHONY: image/push/dev
-image/push/dev:
+.PHONY: image/push
+image/push: image/build
 	docker push quay.io/${QUAY_ORG}/${QUAY_IMAGE}:${DEV_TAG}

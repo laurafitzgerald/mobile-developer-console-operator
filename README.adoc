@@ -68,16 +68,16 @@ Follow these {minishift_cors} in order to enable CORS on Minishift.
 
 ....
 if minishift addons list | grep cors ; then
-    minishift addons apply cors	
-else	
-    MINISHIFT_ADDONS_PATH=/tmp/minishift-addons	
-    rm -rf $MINISHIFT_ADDONS_PATH && git clone https://github.com/minishift/minishift-addons.git $MINISHIFT_ADDONS_PATH	
-    # Not needed after https://github.com/minishift/minishift-addons/pull/187 is merged	
-    cd $MINISHIFT_ADDONS_PATH	
-    git fetch origin pull/187/head:cors-fix && git checkout cors-fix	
-    minishift addons install /tmp/minishift-addons/add-ons/cors	
-    minishift addons apply cors	
-fi	
+    minishift addons apply cors
+else
+    MINISHIFT_ADDONS_PATH=/tmp/minishift-addons
+    rm -rf $MINISHIFT_ADDONS_PATH && git clone https://github.com/minishift/minishift-addons.git $MINISHIFT_ADDONS_PATH
+    # Not needed after https://github.com/minishift/minishift-addons/pull/187 is merged
+    cd $MINISHIFT_ADDONS_PATH
+    git fetch origin pull/187/head:cors-fix && git checkout cors-fix
+    minishift addons install /tmp/minishift-addons/add-ons/cors
+    minishift addons apply cors
+fi
 ....
 
 . Export required OPENSHIFT_HOST variable
@@ -96,14 +96,7 @@ As a user with admin permissions, you can install the
 mobile-developer-console-operator in your OpenShift cluster as follows:
 
 ....
-make cluster/prepare
-
-make install-operator
-
-OPENSHIFT_HOST=https://your-openshift-host
-# or OPENSHIFT_HOST=$(minishift ip):8443, as described in previous section
-
-oc set env -n mobile-developer-console deployment/$(oc get -n mobile-developer-console -f deploy/operator.yaml --template "{{.metadata.name}}") OPENSHIFT_HOST="${OPENSHIFT_HOST}"
+make cluster/prepare install-operator
 ....
 
 == Provisioning a Mobile Developer Console instance

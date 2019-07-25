@@ -9,25 +9,19 @@ rules:
       - secrets
       - configmaps
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
   - apiGroups:
       - mobile.k8s.io
     resources:
       - mobileclients
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
+      - update
+      - patch
   - apiGroups:
       - push.aerogear.org
     resources:
@@ -35,34 +29,22 @@ rules:
       - iosvariants
       - pushapplications
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
   - apiGroups:
       - metrics.aerogear.org
     resources:
       - appmetricsconfigs
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
   - apiGroups:
       - mobile-security-service.aerogear.com
     resources:
       - mobilesecurityserviceapps
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
