@@ -5,15 +5,12 @@ metadata:
     monitoring-key: middleware
     prometheus: application-monitoring
     role: alert-rules
-  name: application-monitoring
+  name: mdc-operator-monitoring
 spec:
-  selector:
-    matchLabels:
-      name: mobile-developer-console-operator
   groups:
     - name: general.rules
       rules:
-      - alert: MDCOperatorDown
+      - alert: MobileDeveloperConsoleOperatorDown
         expr: absent(up{job="mobile-developer-console-operator"} == 1)
         for: 5m
         labels:
@@ -21,14 +18,12 @@ spec:
         annotations:
           description: "The MDC Operator has been down for more than 5 minutes."
           summary: "The MDC Operator is down. For more information on the MDC Operator, see https://github.com/aerogear/mobile-developer-console-operator"
-          sop_url: "https://github.com/aerogear/mobile-developer-console-operator/blob/0.1.0/SOP/SOP-operator.adoc" #todo
-      - alert: MDCPodCount
+      - alert: MobileDeveloperConsolePodCount
         annotations:
           description: "The Pod count for the MDC Server has changed in the last 5 minutes and is lower than the required minimum."
-          summary: "Pod count for namespace MDC is {{ printf '%.0f' $value }}. Expected at least 1 pod. For more information on the MDC Operator, see https://github.com/aerogear/mobile-developer-console-operator"
-          sop_url: "https://github.com/aerogear/mobile-developer-console-operator/blob/0.1.0/SOP/SOP-operator.adoc"
+          summary: "Pod count for Mobile Developer Console is {{ $value }}. Expected at least 2 pods. For more information on the MDC Operator, see https://github.com/aerogear/mobile-developer-console-operator"
         expr: |
-          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"}) < 1
+          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"}) < 2
         for: 5m
         labels:
           severity: warning
