@@ -1,0 +1,134 @@
+ifdef::env-github[]
+:status:
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+:table-caption!:
+endif::[]
+
+:toc:
+:toc-placement!:
+
+= Mobile Developer Console - Standard Operating Procedures
+
+:toc:
+toc::[]
+
+== Overview
+
+The following guide outlines the steps required to manage and solve issues in the https://github.com/aerogear/mobile-developer-console[Mobile Developer Console] which is managed, installed and configured via the https://github.com/aerogear/mobile-developer-console-operator[Mobile Developer Console Operator].
+
+== Reference Articles
+
+- https://github.com/aerogear/mobile-developer-console[Mobile Developer Console]
+- https://github.com/aerogear/mobile-developer-console-operator[Mobile Developer Console Operator]
+- https://prometheus.io/docs/practices/alerting/[Prometheus Alerts documentation]
+
+== Success Indicators
+
+All alerts should appear as green in the Prometheus Alert Monitoring.
+
+== Prometheus Alerts Procedures
+
+IMPORTANT: Before checking any of following steps see if the operator pod is running successfully. More info: link:./SOP-operator.adoc[MobileDeveloperConsoleOperatorDown]
+
+TIP: You can save the logs by running `oc logs <podname> > <filename>.log`. The logs can provided to you useful information in order to identify the root cause of the issue as they are required information to be send to its maintainers in the case it need to be checked by them.
+
+=== Critical
+
+==== MobileDeveloperConsoleDown or MobileDeveloperConsoleContainerDown
+
+. Switch to the Mobile Developer Console namespace by running `oc project <namespace>`. E.g `oc project mobile-developer-console`.
+. Follow the <<Validate>> steps.
+
+. Verify the MobileDeveloperConsole is deployed in the same namespace as the operator.
+.. Run `oc get MobileDeveloperConsole`
++
+Expected results:
+----
+$ oc project mobile-developer-console
+$ oc get MobileDeveloperConsole
+NAME          PHASE
+example-mdc
+----
+
+. Verify that the OAuthProxy Container is running successfully.
++
+.. Run `oc logs <service-podname> -c mdc-oauth-proxy`. E.g `oc logs example-mdc-1-8m5ql -c mdc-oauth-proxy`
++
+
+Logs should include the following:
++
+----
+2019/08/01 09:39:04 oauthproxy.go:201: mapping path "/" => upstream "http://localhost:4000/"
+2019/08/01 09:39:04 oauthproxy.go:228: OAuthProxy configured for  Client ID: mobile-developer-console
+2019/08/01 09:39:04 oauthproxy.go:238: Cookie settings: name:_oauth_proxy secure(https):true httponly:false expiry:168h0m0s domain:<default> refresh:disabled
+2019/08/01 09:39:04 http.go:56: HTTP: listening on 0.0.0.0:4180
+----
++
+
+.. If alternative logs are found in the above step then save the logs by running `oc logs <service-podname> -c mdc-oauth-proxy > <filename>.log`
+
+=== Warning
+
+==== MobileDeveloperConsolePodCPUHigh
+
+This alert indicates that the Service pod(s) is/are using more CPU than expected.
+
+. Please follow the <<To capture the logs>> procedure in order to capture the required information to send it to its maintainers.
+. Please follow the <<To scale the pod>> procedure in order to try to solve performance issues.
+
+==== MobileDeveloperConsolePodMemoryHigh
+
+This alert indicates that the Service pod(s) is/are using more Memory than expected.
+
+. Please follow the <<To capture the logs>> procedure in order to capture the required information to send it to its maintainers.
+. Please follow the <<To scale the pod>> procedure in order to try to solve performance issues.
+
+
+==== To capture the logs
+
+. Capture a snapshot of the 'Mobile Developer Console Application' Grafana dashboard and track it over time. The metrics can be useful for identifying performance issues over time.
+. Capture the Service logs
+.. Get the pod names by running `oc get pods`
+.. Save the logs by running `oc logs <mdc-podname> > <filename>.log` for any pod
+. Capture CR Status by running `oc describe MobileDeveloperConsole`.
+
+==== To scale the pod
+
+. Scale the Mobile Develper Console pod
+.. Check the number of DESIRED and CURRENT replicas, and make sure that they're the same:
+----
+oc get deploymentconfig --selector='app=mdc'
+NAME      REVISION   DESIRED   CURRENT   TRIGGERED BY
+mdc       3          1         1         config,image(mdc-imagestream:1.1.4),image(mdc-oauth-proxy-imagestream:latest)
+----
+If they're not, this may indicate a problem with the ability to scale up (capacity, missing images, etc), or the ability to scale down (a node where a pod was scheduled might be in trouble etc.).
+.. Scale the replication controller if more pods are desired by running `oc scale deploymentconfig --selector='app=mdc' --replicas=X` where X is the number of desired pods.
+
+== Validate
+
+=== Install
+
+. Switch to the Mobile Developer Console namespace by running `oc project <namespace>`  E.g `oc project mobile-developer-console`.
+. Check if the mobile developer console pod to is present by running `oc get pods | grep mdc` or `oc get pods | grep mobile-developer-console`.
++
+[source,shell]
+----
+NAME                                           READY     STATUS    RESTARTS   AGE
+mdc-58c8877fd8-g6dvr                           1/1       Running   3          9d
+----
+
+NOTE: The operator is responsible for managing and creating all objects required to have the Mobile Developer Console Service deployed on the cluster.
+. Check its logs by running `oc logs <operator-podname>`
+NOTE: You can save the logs by running `oc logs <operator-podname> > <filename>.log`. The logs may provide you with useful information to lead you to the root cause, and they are also useful for providing to the project maintainers when you create an issue.
+
+
+=== Optional configurations
+
+==== Monitor
+
+If the https://github.com/aerogear/mobile-developer-console-operator#monitoring-service-metrics[Monitoring Service (Metrics)] is enabled for the installation, a Grafana Dashboard titled `MDC Application`, and the Prometheus Monitoring instance are created.
+
