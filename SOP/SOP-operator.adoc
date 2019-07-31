@@ -1,0 +1,72 @@
+ifdef::env-github[]
+:status:
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+:table-caption!:
+endif::[]
+
+:toc:
+:toc-placement!:
+
+= Mobile Developer Console Operator- Standard Operating Procedures
+
+:toc:
+toc::[]
+
+== Overview
+
+The following guide outlines the steps required to manage and solve issues in the https://github.com/aerogear/mobile-developer-console-operator[Mobile Developer Console Operator].
+
+== Reference Articles
+
+- https://github.com/aerogear/mobile-developer-console[Mobile Developer Console]
+- https://github.com/aerogear/mobile-developer-console-operator[Mobile Developer Console Operator]
+- https://prometheus.io/docs/practices/alerting/[Prometheus Alerts documentation]
+
+== Success Indicators
+
+All alerts should appear as green in the Prometheus Alert Monitoring.
+
+== Prometheus Alerts Procedures
+
+TIP: You can save the logs by running `oc logs <podname> > <filename>.log`. The logs can provided to you useful information in order to identify the root cause of the issue as they are required information to be send to its maintainers in the case it need to be checked by them.
+
+=== Critical
+
+==== MobileDeveloperConsoleOperatorDown
+
+. Switch to the Mobile Developer Console namespace by running `oc project <namespace>`  E.g `oc project mobile-developer-console`.
+. Check if the operator pod is present by running `oc get pods | grep operator`.
+
++
+[source,shell]
+----
+$ oc get pods | grep operator
+mobile-developer-console-operator-58c8877fd8-g6dvr          1/1       Running   3          9d
+----
+
+If the deployment is present but it's scaled down to 0 pods, attempt to scale up the operator pod by running `oc scale --replicas=1 deployment mobile-developer-console-operator`
+
+== Validate
+
+. Switch to the Mobile Developer Console namespace by running `oc project <namespace>`  E.g `oc project mobile-developer-console`.
+. Check if the operator pod to is present by running `oc get pods | grep operator`.
++
+[source,shell]
+----
+$ oc get pods | grep operator
+NAME                                           READY     STATUS    RESTARTS   AGE
+mdc-operator-58c8877fd8-g6dvr                  1/1       Running   3          9d
+----
+
++
+NOTE: The operator is responsible for managing and creating all objects required to have the Mobile Developer Console Service deployed on the cluster.
+. Check its logs by running `oc logs <operator-podname>`
+NOTE: You can save the logs by running `oc logs <operator-podname> > <filename>.log`. The logs may provide you with useful information to lead you to the root cause, and they are also useful for providing to the project maintainers when you create an issue.
++
+
+== Monitoring
+If the https://github.com/aerogear/mobile-developer-console-operator#monitoring-service-metrics[Monitoring Service (Metrics)] is enabled for the installation, a Grafana Dashboard titled `MDC Operator`, and the Prometheus Monitoring instances are created.
