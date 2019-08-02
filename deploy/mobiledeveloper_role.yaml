@@ -73,3 +73,18 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - project.openshift.io
+    resources:
+      - projects
+    resourceNames:
+      - mobile-developer-console
+    verbs:
+      - get
+  - apiGroups:
+      - route.openshift.io
+    resources:
+      - routes
+    verbs:
+      - list
+      - get
