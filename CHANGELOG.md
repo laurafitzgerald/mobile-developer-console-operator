@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.1.4] - 2019-08-02
+
+## Changed
+
+- Give project and route permission to mobile developer role to make OpenShift web console more usable
+
 ## [0.1.3] - 2019-08-01
 
 ## Changed
