@@ -6,14 +6,6 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - namespaces
-    verbs:
-      - get
-    resourceNames:
-      - mobile-developer-console
-  - apiGroups:
-      - ""
-    resources:
       - configmaps
     verbs:
       - create
@@ -73,14 +65,6 @@ rules:
       - patch
       - update
       - watch
-  - apiGroups:
-      - project.openshift.io
-    resources:
-      - projects
-    resourceNames:
-      - mobile-developer-console
-    verbs:
-      - get
   - apiGroups:
       - route.openshift.io
     resources:
