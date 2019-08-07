@@ -260,6 +260,7 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 								"--cookie-httponly=false", // we kill the possibility to run MDC on a http route
 								"--pass-access-token=true",
 								"--scope=user:full",
+								"--bypass-auth-for=/about",
 							},
 						},
 					},
