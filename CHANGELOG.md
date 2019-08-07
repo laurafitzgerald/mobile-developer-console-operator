@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.1.8] - 2019-08-07
+
+## Changed
+
+- Renamed the mobile client CRD's group
+- Updated version of Mobile Developer Console
+
 ## [0.1.7] - 2019-08-07
 
 ## Changed

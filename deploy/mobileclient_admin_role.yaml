@@ -13,7 +13,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      - mobile.k8s.io
+      - mdc.aerogear.org
     resources:
       - mobileclients
     verbs:

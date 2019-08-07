@@ -4,7 +4,7 @@ metadata:
   name: mobileclient-users
 rules:
   - apiGroups:
-      - mobile.k8s.io
+      - mdc.aerogear.org
     resources:
       - mobileclients
     verbs:
