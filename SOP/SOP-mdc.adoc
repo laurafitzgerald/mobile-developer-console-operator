@@ -34,7 +34,7 @@ All alerts should appear as green in the Prometheus Alert Monitoring.
 
 IMPORTANT: Before checking any of following steps see if the operator pod is running successfully. More info: link:./SOP-operator.adoc[MobileDeveloperConsoleOperatorDown]
 
-TIP: You can save the logs by running `oc logs <podname> > <filename>.log`. The logs can provided to you useful information in order to identify the root cause of the issue as they are required information to be send to its maintainers in the case it need to be checked by them.
+TIP: Logs can be saved by running `oc logs <podname> > <filename>.log`. The logs can provide useful information in order to identify the root cause of the issue. They may also contain useful information which should be included when creating any issues against the project for maintainers to check.
 
 === Critical
 
@@ -110,21 +110,69 @@ If they're not, this may indicate a problem with the ability to scale up (capaci
 
 == Validate
 
-=== Install
+=== Installation
+
+Follow these steps to ensure that the installation completed as expected.
 
 . Switch to the Mobile Developer Console namespace by running `oc project <namespace>`  E.g `oc project mobile-developer-console`.
-. Check if the mobile developer console pod to is present by running `oc get pods | grep mdc` or `oc get pods | grep mobile-developer-console`.
+. Check that the link:./deploy/crds/mdc_v1alpha1_mobiledeveloperconsole_cr.yaml[MobileDeveloperConsole CR] is deployed in the same namespace as the operator by running `oc get MobileDeveloperConsole`.
 +
 [source,shell]
 ----
-NAME                                           READY     STATUS    RESTARTS   AGE
-mdc-58c8877fd8-g6dvr                           1/1       Running   3          9d
+$ oc get MobileDeveloperConsole
+NAME                        AGE
+mdc                         9d
 ----
-
-NOTE: The operator is responsible for managing and creating all objects required to have the Mobile Developer Console Service deployed on the cluster.
-. Check its logs by running `oc logs <operator-podname>`
-NOTE: You can save the logs by running `oc logs <operator-podname> > <filename>.log`. The logs may provide you with useful information to lead you to the root cause, and they are also useful for providing to the project maintainers when you create an issue.
-
++
+IMPORTANT: This CR instructs the operator to install and configure Service pods. If there is any issues with the creation of any of the following resources the logs of the operator should be checked for relevant errors.
++
+TIP: Logs can be saved by running `oc logs <podname> > <filename>.log`. The logs can provide useful information in order to identify the root cause of the issue. They may also contain useful information which should be included when creating any issues against the project for maintainers to check.
++
+. Check that there are at least 2 pods running in the namspace (Server and Operator) by running `oc get pods`. 
++
+----
+$ oc get pods
+NAME                                                    READY     STATUS    RESTARTS   AGE
+mdc-6-glhzb                                             1/1       Running   2          12d
+mobile-developer-console-operator-b6d447bcf-c7qfl       1/1       Running   6          12d
+----
++
+. Check that the image streams for the Service and Oauth Proxy were created with success by running `oc get imagestream`. 
++
+[source,shell]
+----
+$ oc get imagestream
+NAME                          DOCKER REPO                                                                               TAGS      UPDATED
+mdc-imagestream               docker-registry.default.svc:5000/mobile-developer-console/mdc-imagestream                 latest    12 days ago
+mdc-oauth-proxy-imagestream   docker-registry.default.svc:5000/mobile-developer-console/mdc-oauth-proxy-imagestream     latest    12 days ago
+----
++
+. Check that the route to expose the service was created successfully by running `oc get route | grep mdc-mdc-proxy`. 
++
+[source,shell]
+----
+$ oc get route | grep mdc-mdc-proxy
+mdc-mdc-proxy   https://<route-name>-mobile-developer-console.apps.<cluster-route>             mdc-mdc-proxy   <all>     edge/None     None
+----
+. Check that the DeploymentConfig to deploy the Service was created successfully by running `oc get deploymentconfig | grep mdc`.  
++
+[source,shell]
+----
+$ oc get deploymentconfig | grep mdc
+mdc   1          2         2         config,image(mdc-imagestream:1.1.1),image(mdc-oauth-proxy-imagestream:latest)
+----
++
+. Check that there are 3 Services created in the namespace, one for the service, one for the OAuth proxy and one for the operator
++
+[source,shell]
+----
+$ oc get service | grep proxy
+NAME                                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+mdc-mdc                             ClusterIP   172.30.38.217   <none>        80/TCP     12d
+mdc-mdc-proxy                       ClusterIP   172.30.77.150   <none>        80/TCP     12d
+mobile-developer-console-operator   ClusterIP   172.30.205.34   <none>        8383/TCP   12d
+----
++
 
 === Optional configurations
 
