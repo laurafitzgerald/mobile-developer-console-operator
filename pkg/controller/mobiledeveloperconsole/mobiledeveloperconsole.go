@@ -2,6 +2,7 @@ package mobiledeveloperconsole
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/aerogear/mobile-developer-console-operator/pkg/util"
 	"github.com/pkg/errors"
@@ -237,6 +238,16 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 									ContainerPort: 4000,
 								},
 							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceLimitsMemory: resource.MustParse("128Gi"),
+									corev1.ResourceLimitsCPU:    resource.MustParse("60m"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("64Mi"),
+									corev1.ResourceCPU:    resource.MustParse("30m"),
+								},
+							},
 						},
 						{
 							Name:            cfg.OauthProxyContainerName,
@@ -261,6 +272,16 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 								"--pass-access-token=true",
 								"--scope=user:full",
 								"--bypass-auth-for=/about",
+							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceLimitsMemory: resource.MustParse("64Mi"),
+									corev1.ResourceLimitsCPU:    resource.MustParse("20m"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("32Mi"),
+									corev1.ResourceCPU:    resource.MustParse("10m"),
+								},
 							},
 						},
 					},
