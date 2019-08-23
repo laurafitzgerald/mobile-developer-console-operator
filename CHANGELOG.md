@@ -5,72 +5,78 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [Unreleased]
+
+## [0.2.3] - 2019-08-23
+
+### Changed
+
+- Updated version of Mobile Developer Console
 
 ## [0.2.2] - 2019-08-15
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
 ## [0.2.1] - 2019-08-15
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
 ## [0.2.0] - 2019-08-15
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
 ## [0.1.10] - 2019-08-09
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
 ## [0.1.9] - 2019-08-08
 
-## Changed
+### Changed
 
 - Added oauth-proxy bypass for /about endpoint
 
 ## [0.1.8] - 2019-08-07
 
-## Changed
+### Changed
 
 - Renamed the mobile client CRD's group
 - Updated version of Mobile Developer Console
 
 ## [0.1.7] - 2019-08-07
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
 ## [0.1.5] - 2019-08-02
 
-## Changed
+### Changed
 
 - Give project and route permission to mobile developer role to make OpenShift web console more usable
 
 ## [0.1.4] - 2019-08-02
 
-## Changed
+### Changed
 
 - Remove namespace in mobile developer role binding and add cluster role binding
 
 ## [0.1.3] - 2019-08-01
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
 ## [0.1.2] - 2019-07-31
 
-## Changed
+### Changed
 
 - Updated version of Mobile Developer Console
 
