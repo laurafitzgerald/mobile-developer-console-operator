@@ -40,7 +40,7 @@ endif::[]
 
 
 The Mobile Developer Console Operator for Kubernetes provides an easy way to
-install and manage an AeroGear Mobile Developer Console Operator on Kubernetes.
+install and manage an AeroGear Mobile Developer Console on Kubernetes.
 
 toc::[]
 
