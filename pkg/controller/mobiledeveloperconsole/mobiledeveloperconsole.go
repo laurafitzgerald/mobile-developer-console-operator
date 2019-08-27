@@ -240,8 +240,8 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 							},
 							Resources: corev1.ResourceRequirements{
 								Limits: corev1.ResourceList{
-									corev1.ResourceLimitsMemory: resource.MustParse("128Gi"),
-									corev1.ResourceLimitsCPU:    resource.MustParse("60m"),
+									corev1.ResourceMemory: resource.MustParse("128Mi"),
+									corev1.ResourceCPU:    resource.MustParse("60m"),
 								},
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("64Mi"),
@@ -275,8 +275,8 @@ func newMDCDeploymentConfig(cr *mdcv1alpha1.MobileDeveloperConsole) (*openshifta
 							},
 							Resources: corev1.ResourceRequirements{
 								Limits: corev1.ResourceList{
-									corev1.ResourceLimitsMemory: resource.MustParse("64Mi"),
-									corev1.ResourceLimitsCPU:    resource.MustParse("20m"),
+									corev1.ResourceMemory: resource.MustParse("64Mi"),
+									corev1.ResourceCPU:    resource.MustParse("20m"),
 								},
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("32Mi"),
