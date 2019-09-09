@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.5] - 2019-09-09
+
+### Changed
+
+- Updated version of Mobile Developer Console
+
 ## [0.2.4] - 2019-08-27
 
 ### Fixed
