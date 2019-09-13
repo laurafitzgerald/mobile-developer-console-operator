@@ -103,7 +103,7 @@ This alert indicates that the Service pod(s) is/are using more Memory than expec
 ----
 oc get deploymentconfig --selector='app=mdc'
 NAME      REVISION   DESIRED   CURRENT   TRIGGERED BY
-mdc       3          1         1         config,image(mdc-imagestream:1.1.10),image(mdc-oauth-proxy-imagestream:latest)
+mdc       3          1         1         config,image(mdc-imagestream:1.1.11),image(mdc-oauth-proxy-imagestream:latest)
 ----
 If they're not, this may indicate a problem with the ability to scale up (capacity, missing images, etc), or the ability to scale down (a node where a pod was scheduled might be in trouble etc.).
 .. Scale the replication controller if more pods are desired by running `oc scale deploymentconfig --selector='app=mdc' --replicas=X` where X is the number of desired pods.
@@ -159,7 +159,7 @@ mdc-mdc-proxy   https://<route-name>-mobile-developer-console.apps.<cluster-rout
 [source,shell]
 ----
 $ oc get deploymentconfig | grep mdc
-mdc   1          2         2         config,image(mdc-imagestream:1.1.10),image(mdc-oauth-proxy-imagestream:latest)
+mdc   1          2         2         config,image(mdc-imagestream:1.1.11),image(mdc-oauth-proxy-imagestream:latest)
 ----
 +
 . Check that there are 3 Services created in the namespace, one for the service, one for the OAuth proxy and one for the operator

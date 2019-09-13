@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.6] - 2019-09-13
+
+### Changed
+
+- Updated version of Mobile Developer Console
+- Increased Request ResourceMemory from 64Mi to 128Mi
+- Increased Request ResourceCPU from 30m to 50m
+- Increased Limit ResourceMemory from 128Mi to 256Mi
+- Increased Limit ResourceCPU from 60m to 100m
+
 ## [0.2.5] - 2019-09-09
 
 ### Changed
