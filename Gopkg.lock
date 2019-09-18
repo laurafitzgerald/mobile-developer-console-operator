@@ -465,6 +465,17 @@
   version = "v3.9.0"
 
 [[projects]]
+  digest = "1:3e8b0f8d2ed4b10f83a0719c1e8853bdb4bbce2ca365aba2843dc9487e4ab35c"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "apps/clientset/versioned/scheme",
+    "apps/clientset/versioned/typed/apps/v1",
+  ]
+  pruneopts = "NT"
+  revision = "1fa528d3be060e4c7178eb69e76d37cf7e699e3c"
+  version = "v3.9.0"
+
+[[projects]]
   digest = "1:674610d54812d3c36ab7861fc826176bf581a9426cc09abec0107414c17f89cd"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
@@ -1236,6 +1247,7 @@
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/log/zap",
@@ -1246,12 +1258,15 @@
     "github.com/pkg/errors",
     "github.com/spf13/pflag",
     "k8s.io/api/core/v1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/api/errors",
+    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
+    "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/client-go/plugin/pkg/client/auth",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",

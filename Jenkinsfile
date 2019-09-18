@@ -119,7 +119,9 @@ pipeline {
                     // qe-pipeline-library step
                     runOperatorTestWithImage (
                         containerImageName: "${env.OPERATOR_CONTAINER_IMAGE_CANDIDATE_NAME}",
-                        namespace: "${env.OPENSHIFT_PROJECT_NAME}"
+                        namespace: "${env.OPENSHIFT_PROJECT_NAME}",
+                        namespacedManifest: true,
+                        globalManifest: true
                     )
                 }
             }
