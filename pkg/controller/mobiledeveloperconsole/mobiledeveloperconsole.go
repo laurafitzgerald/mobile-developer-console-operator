@@ -349,7 +349,7 @@ func newMobileClientAdminRole(cr *mdcv1alpha1.MobileDeveloperConsole) (*rbacv1.R
 func newMDCServiceMonitor(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1.ServiceMonitor, error) {
 	labels := map[string]string{
 		"monitoring-key": "middleware",
-		"name": "mobile-developer-console",
+		"name":           "mobile-developer-console",
 	}
 	matchLabels := map[string]string{
 		"internal": "mdc",
