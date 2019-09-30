@@ -2,14 +2,15 @@ package mobiledeveloperconsole
 
 import (
 	"context"
+
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
 	"github.com/aerogear/mobile-developer-console-operator/pkg/config"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -118,6 +119,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for deletion of secondary resource ServiceMonitor and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &monitoringv1.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for deletion of secondary resource PrometheusRule and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &monitoringv1.PrometheusRule{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})
@@ -399,16 +409,17 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	//#endregion
 
 	//#region Monitoring
+	//## region ServiceMonitor
 	mdcServiceMonitor, err := newMDCServiceMonitor(instance)
 
-	if err := controllerutil.SetControllerReference(instance, mdcServiceMonitor, r.scheme); err != nil{
+	if err := controllerutil.SetControllerReference(instance, mdcServiceMonitor, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if this Service Monitor already exists
 	foundMDCServiceMonitor := &monitoringv1.ServiceMonitor{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcServiceMonitor.Name, Namespace: mdcServiceMonitor.Namespace}, foundMDCServiceMonitor)
-	if err != nil && errors.IsNotFound(err){
+	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ServiceMonitor", "ServiceMonitor.Namespace", mdcServiceMonitor.Namespace, "ServiceMonitor.Name", mdcServiceMonitor.Name)
 		err = r.client.Create(context.TODO(), mdcServiceMonitor)
 		if err != nil {
@@ -419,7 +430,31 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
+	//## endregion ServiceMonitor
 
+	//## region PrometheusRule
+	mdcPrometheusRule, err := newMDCPrometheusRule(instance)
+
+	if err := controllerutil.SetControllerReference(instance, mdcPrometheusRule, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this Prometheus Rule already exists
+	foundMDCPrometheusRule := &monitoringv1.PrometheusRule{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcPrometheusRule.Name, Namespace: mdcPrometheusRule.Namespace}, foundMDCPrometheusRule)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new PrometheusRule", "PrometheusRule.Namespace", mdcPrometheusRule.Namespace, "PrometheusRule.Name", mdcPrometheusRule.Name)
+		err = r.client.Create(context.TODO(), mdcPrometheusRule)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// PrometheusRule created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	//## endregion PrometheusRule
 	//#endregion
 
 	if foundMDCDeploymentConfig.Status.ReadyReplicas > 0 && instance.Status.Phase != mdcv1alpha1.PhaseComplete {
