@@ -6,6 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/aerogear/mobile-developer-console-operator/pkg/util"
+	"github.com/aerogear/mobile-developer-console-operator/version"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -369,6 +370,100 @@ func newMDCServiceMonitor(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: matchLabels,
+			},
+		},
+	}, nil
+}
+
+func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1.PrometheusRule, error) {
+	labels := map[string]string{
+		"monitoring-key": "middleware",
+		"prometheus":     "application-monitoring",
+		"role":           "alert-rules",
+	}
+	critical := map[string]string{
+		"severity": "critical",
+	}
+	warning := map[string]string{
+		"severity": "warning",
+	}
+	sop_url := fmt.Sprintf("https://github.com/aerogear/mobile-developer-console-operator/blob/%s/SOP/SOP-mdc.adoc", version.Version)
+	mdc_info := "For more information see on the MDC at https://github.com/aerogear/mobile-developer-console"
+	mdcContainerDownAnnotations := map[string]string{
+		"description": "The MDC has been down for more than 5 minutes.",
+		"summary":     fmt.Sprintf("The mobile-developer-console is down. %s", mdc_info),
+		"sop_url":     sop_url,
+	}
+	mdcDownAnnotations := map[string]string{
+		"description": "The MDC admin console has been down for more than 5 minutes.",
+		"summary":     fmt.Sprintf("The mobile-developer-console admin console endpoint has been unavailable for more that 5 minutes. %s", mdc_info),
+		"sop_url":     sop_url,
+	}
+	mdcPodCPUHighAnnotations := map[string]string{
+		"description": "The MDC pod has been at 90% CPU usage for more than 5 minutes",
+		"summary":     fmt.Sprintf("The mobile-developer-console is reporting high cpu usage for more that 5 minutes. %s", mdc_info),
+		"sop_url":     sop_url,
+	}
+	mdcPodMemHighAnnotations := map[string]string{
+		"description": "The MDC pod has been at 90% memory usage for more than 5 minutes",
+		"summary":     fmt.Sprintf("The mobile-developer-console is reporting high memory usage for more that 5 minutes. %s", mdc_info),
+		"sop_url":     sop_url,
+	}
+	serviceObjectMeta := util.ObjectMeta(&cr.ObjectMeta, "mdc")
+	container := "mdc"
+	return &monitoringv1.PrometheusRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      "mdc-monitoring",
+			Labels:    labels,
+		},
+		Spec: monitoringv1.PrometheusRuleSpec{
+			Groups: []monitoringv1.RuleGroup{
+				{
+					Name: "general.rules",
+					Rules: []monitoringv1.Rule{
+						{
+							Alert: "MobileDeveloperConsoleContainerDown",
+							Expr: intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: fmt.Sprintf("absent(kube_pod_container_status_running{namespace=\"%s\",container=\"%s\"}>=1)", cr.Namespace, container),
+							},
+							For:         "5m",
+							Labels:      critical,
+							Annotations: mdcContainerDownAnnotations,
+						},
+						{
+							Alert: "MobileDeveloperConsoleDown",
+							Expr: intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: fmt.Sprintf("absent(kube_endpoint_address_available{endpoint=\"%s\"} >= 1)", serviceObjectMeta.Name),
+							},
+							For:         "5m",
+							Labels:      critical,
+							Annotations: mdcDownAnnotations,
+						},
+						{
+							Alert: "MobileDeveloperConsolePodCPUHigh",
+							Expr: intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: fmt.Sprintf("(rate(process_cpu_seconds_total{job='%s'}[1m])) > (((kube_pod_container_resource_limits_cpu_cores{namespace='%s',container='%s'})/100)*90)", serviceObjectMeta.Name, cr.Namespace, container),
+							},
+							For:         "5m",
+							Labels:      warning,
+							Annotations: mdcPodCPUHighAnnotations,
+						},
+						{
+							Alert: "MobileDeveloperConsolePodMemoryHigh",
+							Expr: intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: fmt.Sprintf("(process_resident_memory_bytes{job='%s'}) > (((kube_pod_container_resource_limits_memory_bytes{namespace='%s',container='%s'})/100)*90)", serviceObjectMeta.Name, cr.Namespace, container),
+							},
+							For:         "5m",
+							Labels:      warning,
+							Annotations: mdcPodMemHighAnnotations,
+						},
+					},
+				},
 			},
 		},
 	}, nil
