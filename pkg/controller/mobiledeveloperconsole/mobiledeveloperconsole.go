@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -340,6 +341,34 @@ func newMobileClientAdminRole(cr *mdcv1alpha1.MobileDeveloperConsole) (*rbacv1.R
 				APIGroups: []string{"mobile-security-service.aerogear.org"},
 				Resources: []string{"mobilesecurityserviceapps"},
 				Verbs:     []string{"get", "list", "watch"},
+			},
+		},
+	}, nil
+}
+
+func newMDCServiceMonitor(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1.ServiceMonitor, error) {
+	labels := map[string]string{
+		"monitoring-key": "middleware",
+		"name": "mobile-developer-console",
+	}
+	matchLabels := map[string]string{
+		"internal": "mdc",
+	}
+	return &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      "mobile-developer-console",
+			Labels:    labels,
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Path: "/metrics",
+					Port: "web",
+				},
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: matchLabels,
 			},
 		},
 	}, nil

@@ -28,6 +28,7 @@ rules:
   - services
   - services/finalizers
   - serviceaccounts
+  - servicemonitors
   verbs:
   - get
   - list

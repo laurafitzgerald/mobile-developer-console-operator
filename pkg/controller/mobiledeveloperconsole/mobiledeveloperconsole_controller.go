@@ -9,6 +9,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -115,6 +116,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource ServiceMonitor and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &monitoringv1.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -128,7 +138,7 @@ type ReconcileMobileDeveloperConsole struct {
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a MobileDeveloperConsole object and makes changes based on the state read
+// Reconcile reads the state of the cluster for a MobileDeveloperConsole object and makes changes based on the state read
 // and what is in the MobileDeveloperConsole.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
@@ -386,6 +396,30 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
+	//#endregion
+
+	//#region Monitoring
+	mdcServiceMonitor, err := newMDCServiceMonitor(instance)
+
+	if err := controllerutil.SetControllerReference(instance, mdcServiceMonitor, r.scheme); err != nil{
+		return reconcile.Result{}, err
+	}
+
+	// Check if this Service Monitor already exists
+	foundMDCServiceMonitor := &monitoringv1.ServiceMonitor{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcServiceMonitor.Name, Namespace: mdcServiceMonitor.Namespace}, foundMDCServiceMonitor)
+	if err != nil && errors.IsNotFound(err){
+		reqLogger.Info("Creating a new ServiceMonitor", "ServiceMonitor.Namespace", mdcServiceMonitor.Namespace, "ServiceMonitor.Name", mdcServiceMonitor.Name)
+		err = r.client.Create(context.TODO(), mdcServiceMonitor)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// ServiceMonitor created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	//#endregion
 
 	if foundMDCDeploymentConfig.Status.ReadyReplicas > 0 && instance.Status.Phase != mdcv1alpha1.PhaseComplete {
