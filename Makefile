@@ -98,7 +98,6 @@ monitoring/install:
 	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/service_monitor.yaml
 	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/prometheus_rule.yaml
 	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/grafana_dashboard.yaml
-	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/mdc_service_monitor.yaml
 	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/mdc_prometheus_rule.yaml
 	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/mdc_grafana_dashboard.yaml
 
@@ -108,6 +107,5 @@ monitoring/uninstall:
 	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/service_monitor.yaml
 	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/prometheus_rule.yaml
 	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/grafana_dashboard.yaml
-	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/mdc_service_monitor.yaml
 	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/mdc_prometheus_rule.yaml
 	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/mdc_grafana_dashboard.yaml
