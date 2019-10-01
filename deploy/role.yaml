@@ -176,3 +176,16 @@ rules:
     - update
     - patch
     - delete
+
+- apiGroups:
+  - integreatly.org
+  resources:
+    - grafanadashboards
+  verbs:
+    - get
+    - list
+    - watch
+    - create
+    - update
+    - patch
+    - delete

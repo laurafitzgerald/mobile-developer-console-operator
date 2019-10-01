@@ -18,6 +18,7 @@ import (
 	"github.com/aerogear/mobile-developer-console-operator/version"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	integreatlyv1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -152,6 +153,12 @@ func main() {
 
 	// Setup Scheme for Monitoring apis
 	if err := monitoringv1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	// Setup Scheme for Integreatly apis
+	if err := integreatlyv1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

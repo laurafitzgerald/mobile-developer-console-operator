@@ -6,11 +6,13 @@ import (
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
 	"github.com/aerogear/mobile-developer-console-operator/pkg/config"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	integreatlyv1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -128,6 +130,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for deletion of secondary resource PrometheusRule and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &monitoringv1.PrometheusRule{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for deletion of secondary resource GrafanaDashboard and requeue the owner MobileDeveloperConsole
+	err = c.Watch(&source.Kind{Type: &integreatlyv1.GrafanaDashboard{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})
@@ -455,6 +466,30 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	}
 
 	//## endregion PrometheusRule
+
+	//## region GrafanaDasboard
+	mdcGrafanaDashboard, err := newMDCGrafanaDashboard(instance)
+
+	if err := controllerutil.SetControllerReference(instance, mdcGrafanaDashboard, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if this Grafana Dasboard already exists
+	foundMDCGrafanaDashboard := &integreatlyv1.GrafanaDashboard{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcGrafanaDashboard.Name, Namespace: mdcGrafanaDashboard.Namespace}, foundMDCGrafanaDashboard)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new GrafanaDashboard", "GrafanaDashboard.Namespace", mdcGrafanaDashboard.Namespace, "GrafanaDashboard.Name", mdcGrafanaDashboard.Name)
+		err = r.client.Create(context.TODO(), mdcGrafanaDashboard)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// GrafanaDasboard created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	//## endregion GrafanaDasboard
 	//#endregion
 
 	if foundMDCDeploymentConfig.Status.ReadyReplicas > 0 && instance.Status.Phase != mdcv1alpha1.PhaseComplete {

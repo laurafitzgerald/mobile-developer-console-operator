@@ -73,6 +73,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:45c41cd27a8d986998680bfc86da0bbff5fa4f90d0f446c00636c8b099028ffe"
+  name = "github.com/blang/semver"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ba2c2ddd89069b46a7011d4106f6868f17ee1705"
+  version = "v3.6.1"
+
+[[projects]]
   digest = "1:fdb4ed936abeecb46a8c27dcac83f75c05c87a46d9ec7711411eb785c213fa02"
   name = "github.com/census-instrumentation/opencensus-proto"
   packages = [
@@ -332,6 +340,14 @@
   pruneopts = "NUT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  digest = "1:7411b476513d609e3aad18ea4ad9f828655d453a32e65b042942e43bd1c70146"
+  name = "github.com/integr8ly/grafana-operator"
+  packages = ["pkg/apis/integreatly/v1alpha1"]
+  pruneopts = "NUT"
+  revision = "77709935ec250c21ab230a206254c6e500a3f516"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:da62aa6632d04e080b8a8b85a59ed9ed1550842a0099a55f3ae3a20d02a3745a"
@@ -1145,6 +1161,7 @@
     "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1",
     "github.com/go-openapi/spec",
     "github.com/google/uuid",
+    "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
