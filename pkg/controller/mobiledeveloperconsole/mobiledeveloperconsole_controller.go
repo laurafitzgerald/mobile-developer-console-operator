@@ -2,6 +2,7 @@ package mobiledeveloperconsole
 
 import (
 	"context"
+	"fmt"
 
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
 	"github.com/aerogear/mobile-developer-console-operator/pkg/config"
@@ -14,8 +15,10 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -23,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -44,6 +48,8 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
+	reqLogger := log.WithValues("Add Reconciler")
+
 	// Create a new controller
 	c, err := controller.New("mobiledeveloperconsole-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
@@ -124,8 +130,13 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
 	})
+
 	if err != nil {
-		return err
+		if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
+			reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, a watch wont be added", kindMatchErr.GroupKind), "")
+		} else {
+			return err
+		}
 	}
 
 	// Watch for deletion of secondary resource PrometheusRule and requeue the owner MobileDeveloperConsole
@@ -422,28 +433,34 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	//#region Monitoring
 	//## region ServiceMonitor
 	mdcServiceMonitor, err := newMDCServiceMonitor(instance)
-
 	if err := controllerutil.SetControllerReference(instance, mdcServiceMonitor, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
-
 	// Check if this Service Monitor already exists
 	foundMDCServiceMonitor := &monitoringv1.ServiceMonitor{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcServiceMonitor.Name, Namespace: mdcServiceMonitor.Namespace}, foundMDCServiceMonitor)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new ServiceMonitor", "ServiceMonitor.Namespace", mdcServiceMonitor.Namespace, "ServiceMonitor.Name", mdcServiceMonitor.Name)
-		err = r.client.Create(context.TODO(), mdcServiceMonitor)
-		if err != nil {
+	if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
+		reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, the resource wont be created moving on", kindMatchErr.GroupKind))
+		// Service Monitor Resource not found on the cluster - don't requeue
+		return reconcile.Result{}, nil
+	} else {
+		if err != nil && errors.IsNotFound(err) {
+			reqLogger.Info("Creating a new ServiceMonitor", "ServiceMonitor.Namespace", mdcServiceMonitor.Namespace, "ServiceMonitor.Name", mdcServiceMonitor.Name)
+			err = r.client.Create(context.TODO(), mdcServiceMonitor)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			// ServiceMonitor created successfully - don't requeue
+			return reconcile.Result{}, nil
+		} else if err != nil {
 			return reconcile.Result{}, err
 		}
-		// ServiceMonitor created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
 	}
+
 	//## endregion ServiceMonitor
 
 	//## region PrometheusRule
+
 	mdcPrometheusRule, err := newMDCPrometheusRule(instance)
 
 	if err := controllerutil.SetControllerReference(instance, mdcPrometheusRule, r.scheme); err != nil {
