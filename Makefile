@@ -61,7 +61,7 @@ cluster/prepare:
 .PHONY: cluster/clean
 cluster/clean:
 	make uninstall
-	-kubectl delete -f deploy/role.yaml
+	-kubectl delete -n $(NAMESPACE) -f deploy/role.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/role_binding.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/mobiledeveloper_role.yaml
 	-kubectl delete -n $(NAMESPACE) -f deploy/mobiledeveloper_rolebinding.yaml
