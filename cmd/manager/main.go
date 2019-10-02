@@ -119,7 +119,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("Registering Components.")
+	log.Info("Registering Components.", "")
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
@@ -205,6 +205,9 @@ func main() {
 				log.Info("Install prometheus-operator in you cluster to create ServiceMonitor objects", "error", err.Error())
 			}
 		}
+		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
+		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
+
 	}
 
 	log.Info("Starting the Cmd.")
