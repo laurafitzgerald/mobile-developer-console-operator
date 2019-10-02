@@ -26,6 +26,7 @@ rules:
       - push.aerogear.org
     resources:
       - androidvariants
+      - webpushvariants      
       - iosvariants
       - pushapplications
     verbs:
