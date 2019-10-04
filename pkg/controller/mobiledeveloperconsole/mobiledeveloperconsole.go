@@ -410,7 +410,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 		"summary":     fmt.Sprintf("The mobile-developer-console is reporting high memory usage for more that 5 minutes. %s", mdc_info),
 		"sop_url":     sop_url,
 	}
-	serviceObjectMeta := util.ObjectMeta(&cr.ObjectMeta, "mdc")
+	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name
 	container := "mdc"
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
@@ -437,7 +437,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 							Alert: "MobileDeveloperConsoleDown",
 							Expr: intstr.IntOrString{
 								Type:   intstr.String,
-								StrVal: fmt.Sprintf("absent(kube_endpoint_address_available{endpoint=\"%s\"} >= 1)", serviceObjectMeta.Name),
+								StrVal: fmt.Sprintf("absent(kube_endpoint_address_available{endpoint=\"%s\"} >= 1)", objectMetaName),
 							},
 							For:         "5m",
 							Labels:      critical,
@@ -447,7 +447,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 							Alert: "MobileDeveloperConsolePodCPUHigh",
 							Expr: intstr.IntOrString{
 								Type:   intstr.String,
-								StrVal: fmt.Sprintf("(rate(process_cpu_seconds_total{job='%s'}[1m])) > (((kube_pod_container_resource_limits_cpu_cores{namespace='%s',container='%s'})/100)*90)", serviceObjectMeta.Name, cr.Namespace, container),
+								StrVal: fmt.Sprintf("(rate(process_cpu_seconds_total{job='%s'}[1m])) > (((kube_pod_container_resource_limits_cpu_cores{namespace='%s',container='%s'})/100)*90)", objectMetaName, cr.Namespace, container),
 							},
 							For:         "5m",
 							Labels:      warning,
@@ -457,7 +457,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 							Alert: "MobileDeveloperConsolePodMemoryHigh",
 							Expr: intstr.IntOrString{
 								Type:   intstr.String,
-								StrVal: fmt.Sprintf("(process_resident_memory_bytes{job='%s'}) > (((kube_pod_container_resource_limits_memory_bytes{namespace='%s',container='%s'})/100)*90)", serviceObjectMeta.Name, cr.Namespace, container),
+								StrVal: fmt.Sprintf("(process_resident_memory_bytes{job='%s'}) > (((kube_pod_container_resource_limits_memory_bytes{namespace='%s',container='%s'})/100)*90)", objectMetaName, cr.Namespace, container),
 							},
 							For:         "5m",
 							Labels:      warning,
@@ -474,8 +474,9 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 	labels := map[string]string{
 		"monitoring-key": "middleware",
 	}
-	serviceObjectMeta := util.ObjectMeta(&cr.ObjectMeta, "mdc")
+	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name
 	container := "mdc"
+	namespace := cr.Namespace
 	return &integreatlyv1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
@@ -485,915 +486,822 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 		Spec: integreatlyv1.GrafanaDashboardSpec{
 			Name: "mdcapplication.json",
 			Json: `{
-				"__inputs": [
+				"__requires": [
+				  {
+					"type": "grafana",
+					"id": "grafana",
+					"name": "Grafana",
+					"version": "4.3.2"
+				  },
+				  {
+					"type": "panel",
+					"id": "graph",
+					"name": "Graph",
+					"version": ""
+				  },
+				  {
+					"type": "datasource",
+					"id": "prometheus",
+					"name": "Prometheus",
+					"version": "1.0.0"
+				  },
+				  {
+					"type": "panel",
+					"id": "singlestat",
+					"name": "Singlestat",
+					"version": ""
+				  }
+				],
+				"annotations": {
+				  "list": [
 					{
-					  "name": "DS_PROMETHEUS",
-					  "label": "Prometheus",
-					  "description": "",
-					  "type": "datasource",
-					  "pluginId": "prometheus",
-					  "pluginName": "Prometheus"
+					  "builtIn": 1,
+					  "datasource": "-- Grafana --",
+					  "enable": true,
+					  "hide": true,
+					  "iconColor": "rgba(0, 211, 255, 1)",
+					  "name": "Annotations & Alerts",
+					  "type": "dashboard"
 					}
-				  ],
-				  "__requires": [
-					{
-					  "type": "grafana",
-					  "id": "grafana",
-					  "name": "Grafana",
-					  "version": "4.3.2"
+				  ]
+				},
+				"description": "Application metrics",
+				"editable": true,
+				"gnetId": null,
+				"graphTooltip": 0,
+				"links": [],
+				"panels": [
+				  {
+					"collapsed": false,
+					"gridPos": {
+					  "h": 1,
+					  "w": 24,
+					  "x": 0,
+					  "y": 0
 					},
-					{
-					  "type": "panel",
-					  "id": "graph",
-					  "name": "Graph",
-					  "version": ""
+					"id": 9,
+					"panels": [],
+					"repeat": null,
+					"title": "Uptime",
+					"type": "row"
+				  },
+				  {
+					"aliasColors": {},
+					"bars": true,
+					"dashLength": 10,
+					"dashes": false,
+					"datasource": "Prometheus",
+					"fill": 1,
+					"gridPos": {
+					  "h": 8,
+					  "w": 24,
+					  "x": 3,
+					  "y": 1
 					},
-					{
-					  "type": "datasource",
-					  "id": "prometheus",
-					  "name": "Prometheus",
-					  "version": "1.0.0"
+					"id": 14,
+					"legend": {
+					  "avg": false,
+					  "current": false,
+					  "max": false,
+					  "min": false,
+					  "show": true,
+					  "total": false,
+					  "values": false
 					},
-					{
-					  "type": "panel",
-					  "id": "singlestat",
-					  "name": "Singlestat",
-					  "version": ""
-					}
-				  ],
-				  "annotations": {
-					"list": [
+					"lines": true,
+					"linewidth": 1,
+					"links": [],
+					"nullPointMode": "null",
+					"options": {},
+					"percentage": false,
+					"pointradius": 5,
+					"points": false,
+					"renderer": "flot",
+					"seriesOverrides": [],
+					"spaceLength": 10,
+					"stack": false,
+					"steppedLine": true,
+					"targets": [
 					  {
-						"builtIn": 1,
-						"datasource": "-- Grafana --",
-						"enable": true,
-						"hide": true,
-						"iconColor": "rgba(0, 211, 255, 1)",
-						"name": "Annotations & Alerts",
-						"type": "dashboard"
+						"expr": "kube_endpoint_address_available{namespace='` + namespace + `',endpoint='` + objectMetaName + `'}",
+						"format": "time_series",
+						"intervalFactor": 1,
+						"legendFormat": "MDC Application - Uptime",
+						"refId": "A"
 					  }
-					]
-				  },
-				  "description": "Application metrics",
-				  "editable": true,
-				  "gnetId": null,
-				  "graphTooltip": 0,
-				  "links": [],
-				  "panels": [
-					{
-					  "collapsed": false,
-					  "gridPos": {
-						"h": 1,
-						"w": 24,
-						"x": 0,
-						"y": 0
-					  },
-					  "id": 9,
-					  "panels": [],
-					  "repeat": null,
-					  "title": "Uptime",
-					  "type": "row"
-					},
-					{
-					  "aliasColors": {},
-					  "bars": true,
-					  "dashLength": 10,
-					  "dashes": false,
-					  "datasource": "Prometheus",
-					  "fill": 1,
-					  "gridPos": {
-						"h": 8,
-						"w": 24,
-						"x": 3,
-						"y": 1
-					  },
-					  "id": 14,
-					  "legend": {
-						"avg": false,
-						"current": false,
-						"max": false,
-						"min": false,
-						"show": true,
-						"total": false,
-						"values": false
-					  },
-					  "lines": true,
-					  "linewidth": 1,
-					  "links": [],
-					  "nullPointMode": "null",
-					  "options": {},
-					  "percentage": false,
-					  "pointradius": 5,
-					  "points": false,
-					  "renderer": "flot",
-					  "seriesOverrides": [],
-					  "spaceLength": 10,
-					  "stack": false,
-					  "steppedLine": true,
-					  "targets": [
-						{
-						  "expr": "up{job='` + serviceObjectMeta.Name + `'}",
-						  "format": "time_series",
-						  "intervalFactor": 1,
-						  "legendFormat": "MDC Application - Uptime",
-						  "refId": "A"
-						}
-					  ],
-					  "thresholds": [],
-					  "timeFrom": null,
-					  "timeRegions": [],
-					  "timeShift": null,
-					  "title": "MDC Application - Uptime",
-					  "tooltip": {
-						"shared": true,
-						"sort": 0,
-						"value_type": "individual"
-					  },
-					  "type": "graph",
-					  "xaxis": {
-						"buckets": null,
-						"mode": "time",
-						"name": null,
-						"show": true,
-						"values": []
-					  },
-					  "yaxes": [
-						{
-						  "format": "short",
-						  "label": null,
-						  "logBase": 1,
-						  "max": null,
-						  "min": null,
-						  "show": true
-						},
-						{
-						  "format": "short",
-						  "label": null,
-						  "logBase": 1,
-						  "max": null,
-						  "min": null,
-						  "show": true
-						}
-					  ],
-					  "yaxis": {
-						"align": false,
-						"alignLevel": null
-					  }
-					},
-					{
-					  "collapsed": false,
-					  "gridPos": {
-						"h": 1,
-						"w": 24,
-						"x": 0,
-						"y": 9
-					  },
-					  "id": 10,
-					  "panels": [],
-					  "repeat": null,
-					  "title": "Resources",
-					  "type": "row"
-					},
-					{
-					  "aliasColors": {},
-					  "bars": false,
-					  "dashLength": 10,
-					  "dashes": false,
-					  "datasource": "Prometheus",
-					  "fill": 1,
-					  "gridPos": {
-						"h": 8,
-						"w": 24,
-						"x": 0,
-						"y": 10
-					  },
-					  "id": 4,
-					  "legend": {
-						"avg": false,
-						"current": false,
-						"max": false,
-						"min": false,
-						"show": true,
-						"total": false,
-						"values": false
-					  },
-					  "lines": true,
-					  "linewidth": 1,
-					  "links": [],
-					  "nullPointMode": "null",
-					  "options": {},
-					  "percentage": false,
-					  "pointradius": 5,
-					  "points": false,
-					  "renderer": "flot",
-					  "seriesOverrides": [],
-					  "spaceLength": 10,
-					  "stack": false,
-					  "steppedLine": false,
-					  "targets": [
-						{
-						  "expr": "process_virtual_memory_bytes{job='` + serviceObjectMeta.Name + `'}",
-						  "format": "time_series",
-						  "hide": false,
-						  "intervalFactor": 1,
-						  "legendFormat": "Virtual Memory",
-						  "refId": "A"
-						},
-						{
-						  "expr": "process_resident_memory_bytes{job='` + serviceObjectMeta.Name + `'}",
-						  "format": "time_series",
-						  "hide": false,
-						  "intervalFactor": 2,
-						  "legendFormat": "Memory Usage",
-						  "refId": "B",
-						  "step": 2
-						},
-						{
-						  "expr": "kube_pod_container_resource_limits_memory_bytes{container='` + container + `'}",
-						  "format": "time_series",
-						  "hide": false,
-						  "intervalFactor": 2,
-						  "legendFormat": "Max Memory Allocation",
-						  "refId": "C",
-						  "step": 2
-						},
-						{
-						  "expr": "((kube_pod_container_resource_limits_memory_bytes{container='` + container + `'})/100)*90",
-						  "format": "time_series",
-						  "hide": false,
-						  "intervalFactor": 2,
-						  "legendFormat": "90% of Max Memory Allocation",
-						  "refId": "D",
-						  "step": 2
-						}
-					  ],
-					  "thresholds": [],
-					  "timeFrom": null,
-					  "timeRegions": [],
-					  "timeShift": null,
-					  "title": "Memory Usage",
-					  "tooltip": {
-						"shared": true,
-						"sort": 0,
-						"value_type": "individual"
-					  },
-					  "type": "graph",
-					  "xaxis": {
-						"buckets": null,
-						"mode": "time",
-						"name": null,
-						"show": true,
-						"values": []
-					  },
-					  "yaxes": [
-						{
-						  "format": "bytes",
-						  "label": null,
-						  "logBase": 2,
-						  "max": null,
-						  "min": 0,
-						  "show": true
-						},
-						{
-						  "format": "short",
-						  "label": null,
-						  "logBase": 1,
-						  "max": null,
-						  "min": null,
-						  "show": true
-						}
-					  ],
-					  "yaxis": {
-						"align": false,
-						"alignLevel": null
-					  }
-					},
-					{
-					  "aliasColors": {},
-					  "bars": false,
-					  "dashLength": 10,
-					  "dashes": false,
-					  "datasource": "Prometheus",
-					  "fill": 1,
-					  "gridPos": {
-						"h": 8,
-						"w": 24,
-						"x": 0,
-						"y": 18
-					  },
-					  "id": 2,
-					  "legend": {
-						"avg": false,
-						"current": false,
-						"max": false,
-						"min": false,
-						"show": true,
-						"total": false,
-						"values": false
-					  },
-					  "lines": true,
-					  "linewidth": 1,
-					  "links": [],
-					  "nullPointMode": "null",
-					  "options": {},
-					  "percentage": false,
-					  "pointradius": 5,
-					  "points": false,
-					  "renderer": "flot",
-					  "seriesOverrides": [],
-					  "spaceLength": 10,
-					  "stack": false,
-					  "steppedLine": false,
-					  "targets": [
-						{
-						  "expr": "sum(rate(process_cpu_seconds_total{job='` + serviceObjectMeta.Name + `'}[1m]))*1000",
-						  "format": "time_series",
-						  "interval": "",
-						  "intervalFactor": 2,
-						  "legendFormat": "MDC Service - CPU Usage in Millicores",
-						  "refId": "A",
-						  "step": 2
-						},
-						{
-						  "expr": "(kube_pod_container_resource_limits_cpu_cores{container='` + container + `'})*1000",
-						  "format": "time_series",
-						  "interval": "",
-						  "intervalFactor": 2,
-						  "legendFormat": "Maximum Limit of Millicores",
-						  "refId": "B",
-						  "step": 2
-						},
-						{
-						  "expr": "(((kube_pod_container_resource_limits_cpu_cores{container='` + container + `'})*1000)/100)*90",
-						  "format": "time_series",
-						  "interval": "",
-						  "intervalFactor": 2,
-						  "legendFormat": "90% Limit of Millicores",
-						  "refId": "C",
-						  "step": 2
-						}
-					  ],
-					  "thresholds": [],
-					  "timeFrom": null,
-					  "timeRegions": [],
-					  "timeShift": null,
-					  "title": "CPU Usage",
-					  "tooltip": {
-						"shared": true,
-						"sort": 0,
-						"value_type": "individual"
-					  },
-					  "type": "graph",
-					  "xaxis": {
-						"buckets": null,
-						"mode": "time",
-						"name": null,
-						"show": true,
-						"values": []
-					  },
-					  "yaxes": [
-						{
-						  "format": "short",
-						  "label": "Millicores",
-						  "logBase": 10,
-						  "max": null,
-						  "min": null,
-						  "show": true
-						},
-						{
-						  "format": "short",
-						  "label": null,
-						  "logBase": 1,
-						  "max": null,
-						  "min": null,
-						  "show": true
-						}
-					  ],
-					  "yaxis": {
-						"align": false,
-						"alignLevel": null
-					  }
-					}
-				  ],
-				  "refresh": "10s",
-				  "schemaVersion": 18,
-				  "style": "dark",
-				  "tags": [],
-				  "templating": {
-					"list": []
-				  },
-				  "time": {
-					"from": "now/d",
-					"to": "now"
-				  },
-				  "timepicker": {
-					"refresh_intervals": [
-					  "5s",
-					  "10s",
-					  "30s",
-					  "1m",
-					  "5m",
-					  "15m",
-					  "30m",
-					  "1h",
-					  "2h",
-					  "1d"
 					],
-					"time_options": [
-					  "5m",
-					  "15m",
-					  "1h",
-					  "6h",
-					  "12h",
-					  "24h",
-					  "2d",
-					  "7d",
-					  "30d"
-					]
+					"thresholds": [],
+					"timeFrom": null,
+					"timeRegions": [],
+					"timeShift": null,
+					"title": "MDC Application - Uptime",
+					"tooltip": {
+					  "shared": true,
+					  "sort": 0,
+					  "value_type": "individual"
+					},
+					"type": "graph",
+					"xaxis": {
+					  "buckets": null,
+					  "mode": "time",
+					  "name": null,
+					  "show": true,
+					  "values": []
+					},
+					"yaxes": [
+					  {
+						"format": "short",
+						"label": null,
+						"logBase": 1,
+						"max": null,
+						"min": null,
+						"show": true
+					  },
+					  {
+						"format": "short",
+						"label": null,
+						"logBase": 1,
+						"max": null,
+						"min": null,
+						"show": true
+					  }
+					],
+					"yaxis": {
+					  "align": false,
+					  "alignLevel": null
+					}
 				  },
-				  "timezone": "browser",
-				  "title": "MDC Application",
-				  "uid": "_fSCcUvZk",
-				  "version": 3
-				},{
-				   "annotations": {
-					 "list": [
-					   {
-						 "builtIn": 1,
-						 "datasource": "-- Grafana --",
-						 "enable": true,
-						 "hide": true,
-						 "iconColor": "rgba(0, 211, 255, 1)",
-						 "name": "Annotations & Alerts",
-						 "type": "dashboard"
-					   }
-					 ]
-				   },
-				   "description": "Application metrics",
-				   "editable": true,
-				   "gnetId": null,
-				   "graphTooltip": 0,
-				   "id": 11,
-				   "links": [],
-				   "panels": [
+				  {
+					"collapsed": false,
+					"gridPos": {
+					  "h": 1,
+					  "w": 24,
+					  "x": 0,
+					  "y": 9
+					},
+					"id": 10,
+					"panels": [],
+					"repeat": null,
+					"title": "Resources",
+					"type": "row"
+				  },
+				  {
+					"aliasColors": {},
+					"bars": false,
+					"dashLength": 10,
+					"dashes": false,
+					"datasource": "Prometheus",
+					"fill": 1,
+					"gridPos": {
+					  "h": 8,
+					  "w": 24,
+					  "x": 0,
+					  "y": 10
+					},
+					"id": 4,
+					"legend": {
+					  "avg": false,
+					  "current": false,
+					  "max": false,
+					  "min": false,
+					  "show": true,
+					  "total": false,
+					  "values": false
+					},
+					"lines": true,
+					"linewidth": 1,
+					"links": [],
+					"nullPointMode": "null",
+					"options": {},
+					"percentage": false,
+					"pointradius": 5,
+					"points": false,
+					"renderer": "flot",
+					"seriesOverrides": [],
+					"spaceLength": 10,
+					"stack": false,
+					"steppedLine": false,
+					"targets": [
+					  {
+						"expr": "process_virtual_memory_bytes{namespace='` + namespace + `',job='` + objectMetaName + `'}",
+						"format": "time_series",
+						"hide": false,
+						"intervalFactor": 1,
+						"legendFormat": "Virtual Memory",
+						"refId": "A"
+					  },
+					  {
+						"expr": "process_resident_memory_bytes{namespace='` + namespace + `',job='` + objectMetaName + `'}",
+						"format": "time_series",
+						"hide": false,
+						"intervalFactor": 2,
+						"legendFormat": "Memory Usage",
+						"refId": "B",
+						"step": 2
+					  },
+					  {
+						"expr": "kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `}",
+						"format": "time_series",
+						"hide": false,
+						"intervalFactor": 2,
+						"legendFormat": "Max Memory Allocation",
+						"refId": "C",
+						"step": 2
+					  },
+					  {
+						"expr": "((kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `})/100)*90",
+						"format": "time_series",
+						"hide": false,
+						"intervalFactor": 2,
+						"legendFormat": "90% of Max Memory Allocation",
+						"refId": "D",
+						"step": 2
+					  }
+					],
+					"thresholds": [],
+					"timeFrom": null,
+					"timeRegions": [],
+					"timeShift": null,
+					"title": "Memory Usage",
+					"tooltip": {
+					  "shared": true,
+					  "sort": 0,
+					  "value_type": "individual"
+					},
+					"type": "graph",
+					"xaxis": {
+					  "buckets": null,
+					  "mode": "time",
+					  "name": null,
+					  "show": true,
+					  "values": []
+					},
+					"yaxes": [
+					  {
+						"format": "bytes",
+						"label": null,
+						"logBase": 2,
+						"max": null,
+						"min": 0,
+						"show": true
+					  },
+					  {
+						"format": "short",
+						"label": null,
+						"logBase": 1,
+						"max": null,
+						"min": null,
+						"show": true
+					  }
+					],
+					"yaxis": {
+					  "align": false,
+					  "alignLevel": null
+					}
+				  },
+				  {
+					"aliasColors": {},
+					"bars": false,
+					"dashLength": 10,
+					"dashes": false,
+					"datasource": "Prometheus",
+					"fill": 1,
+					"gridPos": {
+					  "h": 8,
+					  "w": 24,
+					  "x": 0,
+					  "y": 18
+					},
+					"id": 2,
+					"legend": {
+					  "avg": false,
+					  "current": false,
+					  "max": false,
+					  "min": false,
+					  "show": true,
+					  "total": false,
+					  "values": false
+					},
+					"lines": true,
+					"linewidth": 1,
+					"links": [],
+					"nullPointMode": "null",
+					"options": {},
+					"percentage": false,
+					"pointradius": 5,
+					"points": false,
+					"renderer": "flot",
+					"seriesOverrides": [],
+					"spaceLength": 10,
+					"stack": false,
+					"steppedLine": false,
+					"targets": [
+					  {
+						"expr": "sum(rate(process_cpu_seconds_total{namespace='` + namespace + `',job='` + objectMetaName + `'}[1m]))*1000",
+						"format": "time_series",
+						"interval": "",
+						"intervalFactor": 2,
+						"legendFormat": "MDC Service - CPU Usage in Millicores",
+						"refId": "A",
+						"step": 2
+					  },
+					  {
+						"expr": "(kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000",
+						"format": "time_series",
+						"interval": "",
+						"intervalFactor": 2,
+						"legendFormat": "Maximum Limit of Millicores",
+						"refId": "B",
+						"step": 2
+					  },
+					  {
+						"expr": "(((kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000)/100)*90",
+						"format": "time_series",
+						"interval": "",
+						"intervalFactor": 2,
+						"legendFormat": "90% Limit of Millicores",
+						"refId": "C",
+						"step": 2
+					  }
+					],
+					"thresholds": [],
+					"timeFrom": null,
+					"timeRegions": [],
+					"timeShift": null,
+					"title": "CPU Usage",
+					"tooltip": {
+					  "shared": true,
+					  "sort": 0,
+					  "value_type": "individual"
+					},
+					"type": "graph",
+					"xaxis": {
+					  "buckets": null,
+					  "mode": "time",
+					  "name": null,
+					  "show": true,
+					  "values": []
+					},
+					"yaxes": [
+					  {
+						"format": "short",
+						"label": "Millicores",
+						"logBase": 10,
+						"max": null,
+						"min": null,
+						"show": true
+					  },
+					  {
+						"format": "short",
+						"label": null,
+						"logBase": 1,
+						"max": null,
+						"min": null,
+						"show": true
+					  }
+					],
+					"yaxis": {
+					  "align": false,
+					  "alignLevel": null
+					}
+				  }
+				],
+				"refresh": "10s",
+				"schemaVersion": 18,
+				"style": "dark",
+				"tags": [],
+				"templating": {
+				  "list": []
+				},
+				"time": {
+				  "from": "now/d",
+				  "to": "now"
+				},
+				"timepicker": {
+				  "refresh_intervals": [
+					"5s",
+					"10s",
+					"30s",
+					"1m",
+					"5m",
+					"15m",
+					"30m",
+					"1h",
+					"2h",
+					"1d"
+				  ],
+				  "time_options": [
+					"5m",
+					"15m",
+					"1h",
+					"6h",
+					"12h",
+					"24h",
+					"2d",
+					"7d",
+					"30d"
+				  ]
+				},
+				"timezone": "browser",
+				"title": "MDC Application",
+				"uid": "_fSCcUvZk",
+				"version": 3
+			  }{
+				 "annotations": {
+				   "list": [
 					 {
-					   "collapsed": false,
-					   "gridPos": {
-						 "h": 1,
-						 "w": 24,
-						 "x": 0,
-						 "y": 0
-					   },
-					   "id": 9,
-					   "panels": [],
-					   "repeat": null,
-					   "title": "Uptime",
-					   "type": "row"
-					 },
-					 {
-					   "cacheTimeout": null,
-					   "colorBackground": false,
-					   "colorValue": false,
-					   "colors": [
-						 "#d44a3a",
-						 "rgba(237, 129, 40, 0.89)",
-						 "#299c46"
-					   ],
-					   "datasource": "Prometheus",
-					   "format": "percent",
-					   "gauge": {
-						 "maxValue": 100,
-						 "minValue": 95,
-						 "show": true,
-						 "thresholdLabels": true,
-						 "thresholdMarkers": true
-					   },
-					   "gridPos": {
-						 "h": 8,
-						 "w": 3,
-						 "x": 0,
-						 "y": 1
-					   },
-					   "id": 18,
-					   "interval": null,
-					   "links": [],
-					   "mappingType": 1,
-					   "mappingTypes": [
-						 {
-						   "name": "value to text",
-						   "value": 1
-						 },
-						 {
-						   "name": "range to text",
-						   "value": 2
-						 }
-					   ],
-					   "maxDataPoints": 100,
-					   "nullPointMode": "connected",
-					   "nullText": null,
-					   "options": {},
-					   "postfix": "",
-					   "postfixFontSize": "50%",
-					   "prefix": "",
-					   "prefixFontSize": "50%",
-					   "rangeMaps": [
-						 {
-						   "from": "null",
-						   "text": "N/A",
-						   "to": "null"
-						 }
-					   ],
-					   "sparkline": {
-						 "fillColor": "rgba(31, 118, 189, 0.18)",
-						 "full": false,
-						 "lineColor": "rgb(31, 120, 193)",
-						 "show": false
-					   },
-					   "tableColumn": "",
-					   "targets": [
-						 {
-						   "expr": "avg(up{job='` + serviceObjectMeta.Name + `'})*100",
-						   "format": "time_series",
-						   "hide": false,
-						   "intervalFactor": 1,
-						   "refId": "A"
-						 }
-					   ],
-					   "thresholds": "98,99",
-					   "title": "MDC Application Average Percentage Uptime",
-					   "type": "singlestat",
-					   "valueFontSize": "80%",
-					   "valueMaps": [
-						 {
-						   "op": "=",
-						   "text": "N/A",
-						   "value": "null"
-						 }
-					   ],
-					   "valueName": "avg"
-					 },
-					 {
-					   "aliasColors": {},
-					   "bars": true,
-					   "dashLength": 10,
-					   "dashes": false,
-					   "datasource": "Prometheus",
-					   "fill": 1,
-					   "gridPos": {
-						 "h": 8,
-						 "w": 24,
-						 "x": 3,
-						 "y": 1
-					   },
-					   "id": 14,
-					   "legend": {
-						 "avg": false,
-						 "current": false,
-						 "max": false,
-						 "min": false,
-						 "show": true,
-						 "total": false,
-						 "values": false
-					   },
-					   "lines": true,
-					   "linewidth": 1,
-					   "links": [],
-					   "nullPointMode": "null",
-					   "options": {},
-					   "percentage": false,
-					   "pointradius": 5,
-					   "points": false,
-					   "renderer": "flot",
-					   "seriesOverrides": [],
-					   "spaceLength": 10,
-					   "stack": false,
-					   "steppedLine": true,
-					   "targets": [
-						 {
-						   "expr": "up{job='` + serviceObjectMeta.Name + `'}",
-						   "format": "time_series",
-						   "intervalFactor": 1,
-						   "legendFormat": "MDC Application - Uptime",
-						   "refId": "A"
-						 }
-					   ],
-					   "thresholds": [],
-					   "timeFrom": null,
-					   "timeRegions": [],
-					   "timeShift": null,
-					   "title": "MDC Application - Uptime",
-					   "tooltip": {
-						 "shared": true,
-						 "sort": 0,
-						 "value_type": "individual"
-					   },
-					   "type": "graph",
-					   "xaxis": {
-						 "buckets": null,
-						 "mode": "time",
-						 "name": null,
-						 "show": true,
-						 "values": []
-					   },
-					   "yaxes": [
-						 {
-						   "format": "short",
-						   "label": null,
-						   "logBase": 1,
-						   "max": null,
-						   "min": null,
-						   "show": true
-						 },
-						 {
-						   "format": "short",
-						   "label": null,
-						   "logBase": 1,
-						   "max": null,
-						   "min": null,
-						   "show": true
-						 }
-					   ],
-					   "yaxis": {
-						 "align": false,
-						 "alignLevel": null
-					   }
-					 },
-					 {
-					   "collapsed": false,
-					   "gridPos": {
-						 "h": 1,
-						 "w": 24,
-						 "x": 0,
-						 "y": 9
-					   },
-					   "id": 10,
-					   "panels": [],
-					   "repeat": null,
-					   "title": "Resources",
-					   "type": "row"
-					 },
-					 {
-					   "aliasColors": {},
-					   "bars": false,
-					   "dashLength": 10,
-					   "dashes": false,
-					   "datasource": "Prometheus",
-					   "fill": 1,
-					   "gridPos": {
-						 "h": 8,
-						 "w": 24,
-						 "x": 0,
-						 "y": 10
-					   },
-					   "id": 4,
-					   "legend": {
-						 "avg": false,
-						 "current": false,
-						 "max": false,
-						 "min": false,
-						 "show": true,
-						 "total": false,
-						 "values": false
-					   },
-					   "lines": true,
-					   "linewidth": 1,
-					   "links": [],
-					   "nullPointMode": "null",
-					   "options": {},
-					   "percentage": false,
-					   "pointradius": 5,
-					   "points": false,
-					   "renderer": "flot",
-					   "seriesOverrides": [],
-					   "spaceLength": 10,
-					   "stack": false,
-					   "steppedLine": false,
-					   "targets": [
-						 {
-						   "expr": "process_virtual_memory_bytes{job='` + serviceObjectMeta.Name + `'}",
-						   "format": "time_series",
-						   "hide": false,
-						   "intervalFactor": 1,
-						   "legendFormat": "Virtual Memory",
-						   "refId": "A"
-						 },
-						 {
-						   "expr": "process_resident_memory_bytes{job='` + serviceObjectMeta.Name + `'}",
-						   "format": "time_series",
-						   "hide": false,
-						   "intervalFactor": 2,
-						   "legendFormat": "Memory Usage",
-						   "refId": "B",
-						   "step": 2
-						 },
-						 {
-						   "expr": "kube_pod_container_resource_limits_memory_bytes{container='` + container + `'}",
-						   "format": "time_series",
-						   "hide": false,
-						   "intervalFactor": 2,
-						   "legendFormat": "Max Memory Allocation",
-						   "refId": "C",
-						   "step": 2
-						 },
-						 {
-						   "expr": "((kube_pod_container_resource_limits_memory_bytes{container='` + container + `'})/100)*90",
-						   "format": "time_series",
-						   "hide": false,
-						   "intervalFactor": 2,
-						   "legendFormat": "90% of Max Memory Allocation",
-						   "refId": "D",
-						   "step": 2
-						 }
-					   ],
-					   "thresholds": [],
-					   "timeFrom": null,
-					   "timeRegions": [],
-					   "timeShift": null,
-					   "title": "Memory Usage",
-					   "tooltip": {
-						 "shared": true,
-						 "sort": 0,
-						 "value_type": "individual"
-					   },
-					   "type": "graph",
-					   "xaxis": {
-						 "buckets": null,
-						 "mode": "time",
-						 "name": null,
-						 "show": true,
-						 "values": []
-					   },
-					   "yaxes": [
-						 {
-						   "format": "bytes",
-						   "label": null,
-						   "logBase": 2,
-						   "max": null,
-						   "min": 0,
-						   "show": true
-						 },
-						 {
-						   "format": "short",
-						   "label": null,
-						   "logBase": 1,
-						   "max": null,
-						   "min": null,
-						   "show": true
-						 }
-					   ],
-					   "yaxis": {
-						 "align": false,
-						 "alignLevel": null
-					   }
-					 },
-					 {
-					   "aliasColors": {},
-					   "bars": false,
-					   "dashLength": 10,
-					   "dashes": false,
-					   "datasource": "Prometheus",
-					   "fill": 1,
-					   "gridPos": {
-						 "h": 8,
-						 "w": 24,
-						 "x": 0,
-						 "y": 18
-					   },
-					   "id": 2,
-					   "legend": {
-						 "avg": false,
-						 "current": false,
-						 "max": false,
-						 "min": false,
-						 "show": true,
-						 "total": false,
-						 "values": false
-					   },
-					   "lines": true,
-					   "linewidth": 1,
-					   "links": [],
-					   "nullPointMode": "null",
-					   "options": {},
-					   "percentage": false,
-					   "pointradius": 5,
-					   "points": false,
-					   "renderer": "flot",
-					   "seriesOverrides": [],
-					   "spaceLength": 10,
-					   "stack": false,
-					   "steppedLine": false,
-					   "targets": [
-						 {
-						   "expr": "sum(rate(process_cpu_seconds_total{job='` + serviceObjectMeta.Name + `'}[1m]))*1000",
-						   "format": "time_series",
-						   "interval": "",
-						   "intervalFactor": 2,
-						   "legendFormat": "MDC Service - CPU Usage in Millicores",
-						   "refId": "A",
-						   "step": 2
-						 },
-						 {
-						   "expr": "(kube_pod_container_resource_limits_cpu_cores{container='` + container + `'})*1000",
-						   "format": "time_series",
-						   "interval": "",
-						   "intervalFactor": 2,
-						   "legendFormat": "Maximum Limit of Millicores",
-						   "refId": "B",
-						   "step": 2
-						 },
-						 {
-						   "expr": "(((kube_pod_container_resource_limits_cpu_cores{container='` + container + `'})*1000)/100)*90",
-						   "format": "time_series",
-						   "interval": "",
-						   "intervalFactor": 2,
-						   "legendFormat": "90% Limit of Millicores",
-						   "refId": "C",
-						   "step": 2
-						 }
-					   ],
-					   "thresholds": [],
-					   "timeFrom": null,
-					   "timeRegions": [],
-					   "timeShift": null,
-					   "title": "CPU Usage",
-					   "tooltip": {
-						 "shared": true,
-						 "sort": 0,
-						 "value_type": "individual"
-					   },
-					   "type": "graph",
-					   "xaxis": {
-						 "buckets": null,
-						 "mode": "time",
-						 "name": null,
-						 "show": true,
-						 "values": []
-					   },
-					   "yaxes": [
-						 {
-						   "format": "short",
-						   "label": "Millicores",
-						   "logBase": 10,
-						   "max": null,
-						   "min": null,
-						   "show": true
-						 },
-						 {
-						   "format": "short",
-						   "label": null,
-						   "logBase": 1,
-						   "max": null,
-						   "min": null,
-						   "show": true
-						 }
-					   ],
-					   "yaxis": {
-						 "align": false,
-						 "alignLevel": null
-					   }
+					   "builtIn": 1,
+					   "datasource": "-- Grafana --",
+					   "enable": true,
+					   "hide": true,
+					   "iconColor": "rgba(0, 211, 255, 1)",
+					   "name": "Annotations & Alerts",
+					   "type": "dashboard"
 					 }
-				   ],
-				   "refresh": "10s",
-				   "schemaVersion": 18,
-				   "style": "dark",
-				   "tags": [],
-				   "templating": {
-					 "list": []
+				   ]
+				 },
+				 "description": "Application metrics",
+				 "editable": true,
+				 "gnetId": null,
+				 "graphTooltip": 0,
+				 "id": 11,
+				 "links": [],
+				 "panels": [
+				   {
+					 "collapsed": false,
+					 "gridPos": {
+					   "h": 1,
+					   "w": 24,
+					   "x": 0,
+					   "y": 0
+					 },
+					 "id": 9,
+					 "panels": [],
+					 "repeat": null,
+					 "title": "Uptime",
+					 "type": "row"
 				   },
-				   "time": {
-					 "from": "now/d",
-					 "to": "now"
-				   },
-				   "timepicker": {
-					 "refresh_intervals": [
-					   "5s",
-					   "10s",
-					   "30s",
-					   "1m",
-					   "5m",
-					   "15m",
-					   "30m",
-					   "1h",
-					   "2h",
-					   "1d"
+				   {
+					 "aliasColors": {},
+					 "bars": true,
+					 "dashLength": 10,
+					 "dashes": false,
+					 "datasource": "Prometheus",
+					 "fill": 1,
+					 "gridPos": {
+					   "h": 8,
+					   "w": 24,
+					   "x": 3,
+					   "y": 1
+					 },
+					 "id": 14,
+					 "legend": {
+					   "avg": false,
+					   "current": false,
+					   "max": false,
+					   "min": false,
+					   "show": true,
+					   "total": false,
+					   "values": false
+					 },
+					 "lines": true,
+					 "linewidth": 1,
+					 "links": [],
+					 "nullPointMode": "null",
+					 "options": {},
+					 "percentage": false,
+					 "pointradius": 5,
+					 "points": false,
+					 "renderer": "flot",
+					 "seriesOverrides": [],
+					 "spaceLength": 10,
+					 "stack": false,
+					 "steppedLine": true,
+					 "targets": [
+					   {
+						 "expr": "kube_endpoint_address_available{namespace='` + namespace + `',endpoint='` + objectMetaName + `'}",
+						 "format": "time_series",
+						 "intervalFactor": 1,
+						 "legendFormat": "MDC Application - Uptime",
+						 "refId": "A"
+					   }
 					 ],
-					 "time_options": [
-					   "5m",
-					   "15m",
-					   "1h",
-					   "6h",
-					   "12h",
-					   "24h",
-					   "2d",
-					   "7d",
-					   "30d"
-					 ]
+					 "thresholds": [],
+					 "timeFrom": null,
+					 "timeRegions": [],
+					 "timeShift": null,
+					 "title": "MDC Application - Uptime",
+					 "tooltip": {
+					   "shared": true,
+					   "sort": 0,
+					   "value_type": "individual"
+					 },
+					 "type": "graph",
+					 "xaxis": {
+					   "buckets": null,
+					   "mode": "time",
+					   "name": null,
+					   "show": true,
+					   "values": []
+					 },
+					 "yaxes": [
+					   {
+						 "format": "short",
+						 "label": null,
+						 "logBase": 1,
+						 "max": null,
+						 "min": null,
+						 "show": true
+					   },
+					   {
+						 "format": "short",
+						 "label": null,
+						 "logBase": 1,
+						 "max": null,
+						 "min": null,
+						 "show": true
+					   }
+					 ],
+					 "yaxis": {
+					   "align": false,
+					   "alignLevel": null
+					 }
 				   },
-				   "timezone": "browser",
-				   "title": "MDC Application",
-				   "version": 1
-				 }
-			}`,
+				   {
+					 "collapsed": false,
+					 "gridPos": {
+					   "h": 1,
+					   "w": 24,
+					   "x": 0,
+					   "y": 9
+					 },
+					 "id": 10,
+					 "panels": [],
+					 "repeat": null,
+					 "title": "Resources",
+					 "type": "row"
+				   },
+				   {
+					 "aliasColors": {},
+					 "bars": false,
+					 "dashLength": 10,
+					 "dashes": false,
+					 "datasource": "Prometheus",
+					 "fill": 1,
+					 "gridPos": {
+					   "h": 8,
+					   "w": 24,
+					   "x": 0,
+					   "y": 10
+					 },
+					 "id": 4,
+					 "legend": {
+					   "avg": false,
+					   "current": false,
+					   "max": false,
+					   "min": false,
+					   "show": true,
+					   "total": false,
+					   "values": false
+					 },
+					 "lines": true,
+					 "linewidth": 1,
+					 "links": [],
+					 "nullPointMode": "null",
+					 "options": {},
+					 "percentage": false,
+					 "pointradius": 5,
+					 "points": false,
+					 "renderer": "flot",
+					 "seriesOverrides": [],
+					 "spaceLength": 10,
+					 "stack": false,
+					 "steppedLine": false,
+					 "targets": [
+					   {
+						 "expr": "process_virtual_memory_bytes{namespace='` + namespace + `',job='` + objectMetaName + `'}",
+						 "format": "time_series",
+						 "hide": false,
+						 "intervalFactor": 1,
+						 "legendFormat": "Virtual Memory",
+						 "refId": "A"
+					   },
+					   {
+						 "expr": "process_resident_memory_bytes{namespace='` + namespace + `',job='` + objectMetaName + `'}",
+						 "format": "time_series",
+						 "hide": false,
+						 "intervalFactor": 2,
+						 "legendFormat": "Memory Usage",
+						 "refId": "B",
+						 "step": 2
+					   },
+					   {
+						 "expr": "kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `}",
+						 "format": "time_series",
+						 "hide": false,
+						 "intervalFactor": 2,
+						 "legendFormat": "Max Memory Allocation",
+						 "refId": "C",
+						 "step": 2
+					   },
+					   {
+						 "expr": "((kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `})/100)*90",
+						 "format": "time_series",
+						 "hide": false,
+						 "intervalFactor": 2,
+						 "legendFormat": "90% of Max Memory Allocation",
+						 "refId": "D",
+						 "step": 2
+					   }
+					 ],
+					 "thresholds": [],
+					 "timeFrom": null,
+					 "timeRegions": [],
+					 "timeShift": null,
+					 "title": "Memory Usage",
+					 "tooltip": {
+					   "shared": true,
+					   "sort": 0,
+					   "value_type": "individual"
+					 },
+					 "type": "graph",
+					 "xaxis": {
+					   "buckets": null,
+					   "mode": "time",
+					   "name": null,
+					   "show": true,
+					   "values": []
+					 },
+					 "yaxes": [
+					   {
+						 "format": "bytes",
+						 "label": null,
+						 "logBase": 2,
+						 "max": null,
+						 "min": 0,
+						 "show": true
+					   },
+					   {
+						 "format": "short",
+						 "label": null,
+						 "logBase": 1,
+						 "max": null,
+						 "min": null,
+						 "show": true
+					   }
+					 ],
+					 "yaxis": {
+					   "align": false,
+					   "alignLevel": null
+					 }
+				   },
+				   {
+					 "aliasColors": {},
+					 "bars": false,
+					 "dashLength": 10,
+					 "dashes": false,
+					 "datasource": "Prometheus",
+					 "fill": 1,
+					 "gridPos": {
+					   "h": 8,
+					   "w": 24,
+					   "x": 0,
+					   "y": 18
+					 },
+					 "id": 2,
+					 "legend": {
+					   "avg": false,
+					   "current": false,
+					   "max": false,
+					   "min": false,
+					   "show": true,
+					   "total": false,
+					   "values": false
+					 },
+					 "lines": true,
+					 "linewidth": 1,
+					 "links": [],
+					 "nullPointMode": "null",
+					 "options": {},
+					 "percentage": false,
+					 "pointradius": 5,
+					 "points": false,
+					 "renderer": "flot",
+					 "seriesOverrides": [],
+					 "spaceLength": 10,
+					 "stack": false,
+					 "steppedLine": false,
+					 "targets": [
+					   {
+						 "expr": "sum(rate(process_cpu_seconds_total{namespace='` + namespace + `',job='` + objectMetaName + `'}[1m]))*1000",
+						 "format": "time_series",
+						 "interval": "",
+						 "intervalFactor": 2,
+						 "legendFormat": "MDC Service - CPU Usage in Millicores",
+						 "refId": "A",
+						 "step": 2
+					   },
+					   {
+						 "expr": "(kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000",
+						 "format": "time_series",
+						 "interval": "",
+						 "intervalFactor": 2,
+						 "legendFormat": "Maximum Limit of Millicores",
+						 "refId": "B",
+						 "step": 2
+					   },
+					   {
+						 "expr": "(((kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000)/100)*90",
+						 "format": "time_series",
+						 "interval": "",
+						 "intervalFactor": 2,
+						 "legendFormat": "90% Limit of Millicores",
+						 "refId": "C",
+						 "step": 2
+					   }
+					 ],
+					 "thresholds": [],
+					 "timeFrom": null,
+					 "timeRegions": [],
+					 "timeShift": null,
+					 "title": "CPU Usage",
+					 "tooltip": {
+					   "shared": true,
+					   "sort": 0,
+					   "value_type": "individual"
+					 },
+					 "type": "graph",
+					 "xaxis": {
+					   "buckets": null,
+					   "mode": "time",
+					   "name": null,
+					   "show": true,
+					   "values": []
+					 },
+					 "yaxes": [
+					   {
+						 "format": "short",
+						 "label": "Millicores",
+						 "logBase": 10,
+						 "max": null,
+						 "min": null,
+						 "show": true
+					   },
+					   {
+						 "format": "short",
+						 "label": null,
+						 "logBase": 1,
+						 "max": null,
+						 "min": null,
+						 "show": true
+					   }
+					 ],
+					 "yaxis": {
+					   "align": false,
+					   "alignLevel": null
+					 }
+				   }
+				 ],
+				 "refresh": "10s",
+				 "schemaVersion": 18,
+				 "style": "dark",
+				 "tags": [],
+				 "templating": {
+				   "list": []
+				 },
+				 "time": {
+				   "from": "now/d",
+				   "to": "now"
+				 },
+				 "timepicker": {
+				   "refresh_intervals": [
+					 "5s",
+					 "10s",
+					 "30s",
+					 "1m",
+					 "5m",
+					 "15m",
+					 "30m",
+					 "1h",
+					 "2h",
+					 "1d"
+				   ],
+				   "time_options": [
+					 "5m",
+					 "15m",
+					 "1h",
+					 "6h",
+					 "12h",
+					 "24h",
+					 "2d",
+					 "7d",
+					 "30d"
+				   ]
+				 },
+				 "timezone": "browser",
+				 "title": "MDC Application",
+				 "version": 1
+			   }`,
 		},
 	}, nil
 }
