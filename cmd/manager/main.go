@@ -9,11 +9,13 @@ import (
 	"runtime"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	"k8s.io/apimachinery/pkg/util/intstr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
 	"github.com/aerogear/mobile-developer-console-operator/pkg/apis"
 	"github.com/aerogear/mobile-developer-console-operator/pkg/controller"
+	"github.com/aerogear/mobile-developer-console-operator/pkg/util"
 
 	"github.com/aerogear/mobile-developer-console-operator/version"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -33,7 +35,6 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -151,6 +152,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create and start a new auto detect process for this operator
+	autodetect, err := util.NewAutoDetect(mgr)
+	if err != nil {
+		log.Error(err, "failed to start the background process to auto-detect the operator capabilities")
+	} else {
+		autodetect.Start()
+	}
+
 	// Setup Scheme for Monitoring apis
 	if err := monitoringv1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
@@ -164,7 +173,7 @@ func main() {
 	}
 
 	// Setup all Controllers
-	if err := controller.AddToManager(mgr); err != nil {
+	if err := controller.AddToManager(mgr, autodetect.SubscriptionChannel); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

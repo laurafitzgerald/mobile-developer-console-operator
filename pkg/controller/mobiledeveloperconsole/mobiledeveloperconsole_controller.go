@@ -6,13 +6,18 @@ import (
 
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
 	"github.com/aerogear/mobile-developer-console-operator/pkg/config"
+	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
+
+	"github.com/aerogear/mobile-developer-console-operator/pkg/util"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	integreatlyv1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
+
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -35,23 +40,35 @@ var (
 	log = logf.Log.WithName("controller_mobiledeveloperconsole")
 )
 
+const (
+	ControllerName = "mobiledeveloperconsole-controller"
+)
+
 // Add creates a new MobileDeveloperConsole Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+func Add(mgr manager.Manager, autodetectChannel chan schema.GroupVersionKind) error {
+	return add(mgr, newReconciler(mgr), autodetectChannel)
 }
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileMobileDeveloperConsole{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	client := mgr.GetClient()
+
+	return &ReconcileMobileDeveloperConsole{
+		client:  client,
+		scheme:  mgr.GetScheme(),
+		context: ctx,
+		cancel:  cancel,
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	reqLogger := log.WithValues("Add Reconciler")
+func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan schema.GroupVersionKind) error {
 
 	// Create a new controller
-	c, err := controller.New("mobiledeveloperconsole-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(ControllerName, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
@@ -125,37 +142,24 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for deletion of secondary resource ServiceMonitor and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &monitoringv1.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
-	})
+	go func() {
+		for gvk := range autodetectChannel {
+			// Check if this channel event was for the PrometheusRule resource type
+			if gvk.String() == monitoringv1.SchemeGroupVersion.WithKind(monitoringv1.PrometheusRuleKind).String() {
+				watchSecondaryResource(c, gvk, &monitoringv1.PrometheusRule{}) // nolint
+			}
 
-	if err != nil {
-		if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
-			reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, a watch wont be added", kindMatchErr.GroupKind), "")
-		} else {
-			return err
+			// Check if this channel event was for the ServiceMonitor resource type
+			if gvk.String() == monitoringv1.SchemeGroupVersion.WithKind(monitoringv1.ServiceMonitorsKind).String() {
+				watchSecondaryResource(c, gvk, &monitoringv1.ServiceMonitor{}) // nolint
+			}
+
+			// Check if this channel event was for the GrafanaDashboard resource type
+			if gvk.String() == integreatlyv1alpha1.SchemeGroupVersion.WithKind(integreatlyv1alpha1.GrafanaDashboardKind).String() {
+				watchSecondaryResource(c, gvk, &integreatlyv1alpha1.GrafanaDashboard{}) // nolint
+			}
 		}
-	}
-
-	// Watch for deletion of secondary resource PrometheusRule and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &monitoringv1.PrometheusRule{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Watch for deletion of secondary resource GrafanaDashboard and requeue the owner MobileDeveloperConsole
-	err = c.Watch(&source.Kind{Type: &integreatlyv1.GrafanaDashboard{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
-	})
-	if err != nil {
-		return err
-	}
+	}()
 
 	return nil
 }
@@ -166,8 +170,10 @@ var _ reconcile.Reconciler = &ReconcileMobileDeveloperConsole{}
 type ReconcileMobileDeveloperConsole struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client  client.Client
+	scheme  *runtime.Scheme
+	context context.Context
+	cancel  context.CancelFunc
 }
 
 // Reconcile reads the state of the cluster for a MobileDeveloperConsole object and makes changes based on the state read
@@ -492,7 +498,7 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	}
 
 	// Check if this Grafana Dasboard already exists
-	foundMDCGrafanaDashboard := &integreatlyv1.GrafanaDashboard{}
+	foundMDCGrafanaDashboard := &integreatlyv1alpha1.GrafanaDashboard{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcGrafanaDashboard.Name, Namespace: mdcGrafanaDashboard.Namespace}, foundMDCGrafanaDashboard)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new GrafanaDashboard", "GrafanaDashboard.Namespace", mdcGrafanaDashboard.Namespace, "GrafanaDashboard.Name", mdcGrafanaDashboard.Name)
@@ -517,4 +523,36 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	// Resources already exist - don't requeue
 	reqLogger.Info("Skip reconcile: Resources already exist")
 	return reconcile.Result{}, nil
+}
+
+func watchSecondaryResource(c controller.Controller, gvk schema.GroupVersionKind, o runtime.Object) error {
+	stateManager := util.GetStateManager()
+	stateFieldName := getStateFieldName(gvk.Kind)
+
+	// Check to see if the watch exists for this resource type already for this controller, if it does, we return so we don't set up another watch
+	watchExists, keyExists := stateManager.GetState(stateFieldName).(bool)
+	if keyExists || watchExists {
+		return nil
+	}
+
+	// Set up the actual watch
+	err := c.Watch(&source.Kind{Type: o}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
+	})
+
+	// Retry on error
+	if err != nil {
+		log.Error(err, "error creating watch")
+		stateManager.SetState(stateFieldName, false)
+		return err
+	}
+
+	stateManager.SetState(stateFieldName, true)
+	log.Info(fmt.Sprintf("Watch created for '%s' resource in '%s'", gvk.Kind, ControllerName))
+	return nil
+}
+
+func getStateFieldName(kind string) string {
+	return ControllerName + "-watch-" + kind
 }
