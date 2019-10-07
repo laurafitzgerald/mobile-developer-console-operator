@@ -164,7 +164,7 @@ rules:
 
 # Needed to be able to create ServiceMonitor for operator & operands
 - apiGroups:
-  - monitoring.coreos.com
+    - monitoring.coreos.com
   resources:
     - servicemonitors
     - prometheusrules
@@ -178,7 +178,7 @@ rules:
     - delete
 
 - apiGroups:
-  - integreatly.org
+    - integreatly.org
   resources:
     - grafanadashboards
   verbs:
