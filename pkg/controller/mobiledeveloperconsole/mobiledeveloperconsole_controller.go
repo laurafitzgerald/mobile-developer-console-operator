@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -516,7 +517,34 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	}
 
 	//## endregion GrafanaDasboard
-	//#endregion
+
+	//#region mobile-developer Role
+	mobileDeveloperRole := &rbacv1.Role{ObjectMeta: metav1.ObjectMeta{Name: "mobile-developer", Namespace: instance.Namespace}}
+	op, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, mobileDeveloperRole, func(ignore runtime.Object) error {
+		reconcileMobileDeveloperRole(mobileDeveloperRole)
+		return nil
+	})
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if op != controllerutil.OperationResultNone {
+		reqLogger.Info("Role reconciled:", "Role.Name", mobileDeveloperRole.Name, "Role.Namespace", mobileDeveloperRole.Namespace, "Operation", op)
+	}
+	//#endregion mobile-developer Role
+
+	//#region mobile-developer RoleBinding
+	mobileDeveloperRoleBinding := &rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "mobile-developer", Namespace: instance.Namespace}}
+	op, err = controllerutil.CreateOrUpdate(context.TODO(), r.client, mobileDeveloperRoleBinding, func(ignore runtime.Object) error {
+		reconcileMobileDeveloperRoleBinding(mobileDeveloperRoleBinding)
+		return nil
+	})
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if op != controllerutil.OperationResultNone {
+		reqLogger.Info("RoleBinding reconciled:", "RoleBinding.Name", mobileDeveloperRoleBinding.Name, "RoleBinding.Namespace", mobileDeveloperRoleBinding.Namespace, "Operation", op)
+	}
+	//#endregion mobile-developer RoleBinding
 
 	if foundMDCDeploymentConfig.Status.ReadyReplicas > 0 && instance.Status.Phase != mdcv1alpha1.PhaseComplete {
 		instance.Status.Phase = mdcv1alpha1.PhaseComplete
