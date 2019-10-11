@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -109,11 +110,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	syncperiod := time.Duration(time.Minute)
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
 		MapperProvider:     restmapper.NewDynamicRESTMapper,
 		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		SyncPeriod:         &syncperiod,
 	})
 	if err != nil {
 		log.Error(err, "")
