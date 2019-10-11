@@ -183,7 +183,7 @@ type ReconcileMobileDeveloperConsole struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling MobileDeveloperConsole")
+	reqLogger.Info("Start Reconcile - MobileDeveloperConsole")
 
 	// Fetch the MobileDeveloperConsole instance
 	instance := &mdcv1alpha1.MobileDeveloperConsole{}
@@ -446,9 +446,7 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	foundMDCServiceMonitor := &monitoringv1.ServiceMonitor{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcServiceMonitor.Name, Namespace: mdcServiceMonitor.Namespace}, foundMDCServiceMonitor)
 	if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
-		reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, the resource wont be created moving on", kindMatchErr.GroupKind))
-		// Service Monitor Resource not found on the cluster - don't requeue
-		return reconcile.Result{}, nil
+		reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, the resource wont be created moving on. Install prometheus-operator in you cluster to create %s objects", kindMatchErr.GroupKind, kindMatchErr.GroupKind))
 	} else {
 		if err != nil && errors.IsNotFound(err) {
 			reqLogger.Info("Creating a new ServiceMonitor", "ServiceMonitor.Namespace", mdcServiceMonitor.Namespace, "ServiceMonitor.Name", mdcServiceMonitor.Name)
@@ -456,8 +454,7 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 			if err != nil {
 				return reconcile.Result{}, err
 			}
-			// ServiceMonitor created successfully - don't requeue
-			return reconcile.Result{}, nil
+			// ServiceMonitor created successfully
 		} else if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -476,18 +473,21 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	// Check if this Prometheus Rule already exists
 	foundMDCPrometheusRule := &monitoringv1.PrometheusRule{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcPrometheusRule.Name, Namespace: mdcPrometheusRule.Namespace}, foundMDCPrometheusRule)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new PrometheusRule", "PrometheusRule.Namespace", mdcPrometheusRule.Namespace, "PrometheusRule.Name", mdcPrometheusRule.Name)
-		err = r.client.Create(context.TODO(), mdcPrometheusRule)
-		if err != nil {
+	if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
+		reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, the resource wont be created moving on. Install prometheus-operator in you cluster to create %s objects", kindMatchErr.GroupKind, kindMatchErr.GroupKind))
+	} else {
+		if err != nil && errors.IsNotFound(err) {
+			reqLogger.Info("Creating a new PrometheusRule", "PrometheusRule.Namespace", mdcPrometheusRule.Namespace, "PrometheusRule.Name", mdcPrometheusRule.Name)
+			err = r.client.Create(context.TODO(), mdcPrometheusRule)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			// PrometheusRule created successfully
+			return reconcile.Result{}, nil
+		} else if err != nil {
 			return reconcile.Result{}, err
 		}
-		// PrometheusRule created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
 	}
-
 	//## endregion PrometheusRule
 
 	//## region GrafanaDasboard
@@ -500,16 +500,19 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 	// Check if this Grafana Dasboard already exists
 	foundMDCGrafanaDashboard := &integreatlyv1alpha1.GrafanaDashboard{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: mdcGrafanaDashboard.Name, Namespace: mdcGrafanaDashboard.Namespace}, foundMDCGrafanaDashboard)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new GrafanaDashboard", "GrafanaDashboard.Namespace", mdcGrafanaDashboard.Namespace, "GrafanaDashboard.Name", mdcGrafanaDashboard.Name)
-		err = r.client.Create(context.TODO(), mdcGrafanaDashboard)
-		if err != nil {
+	if kindMatchErr, ok := err.(*meta.NoKindMatchError); ok {
+		reqLogger.Info(fmt.Sprintf("%s is not available on the cluster, the resource wont be created moving on. Install grafana-operator in you cluster to create %s objects", kindMatchErr.GroupKind, kindMatchErr.GroupKind))
+	} else {
+		if err != nil && errors.IsNotFound(err) {
+			reqLogger.Info("Creating a new GrafanaDashboard", "GrafanaDashboard.Namespace", mdcGrafanaDashboard.Namespace, "GrafanaDashboard.Name", mdcGrafanaDashboard.Name)
+			err = r.client.Create(context.TODO(), mdcGrafanaDashboard)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			// GrafanaDasboard created successfully
+		} else if err != nil {
 			return reconcile.Result{}, err
 		}
-		// GrafanaDasboard created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
 	}
 
 	//## endregion GrafanaDasboard
@@ -519,9 +522,8 @@ func (r *ReconcileMobileDeveloperConsole) Reconcile(request reconcile.Request) (
 		instance.Status.Phase = mdcv1alpha1.PhaseComplete
 		r.client.Status().Update(context.TODO(), instance)
 	}
-
 	// Resources already exist - don't requeue
-	reqLogger.Info("Skip reconcile: Resources already exist")
+	reqLogger.Info("Finish Reconcile - MobileDeveloperConsole")
 	return reconcile.Result{}, nil
 }
 
