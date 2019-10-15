@@ -73,13 +73,13 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		return err
 	}
 
-	// Watch for deletion of primary resource MobileDeveloperConsole
+	// Watch for changes to primary resource MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &mdcv1alpha1.MobileDeveloperConsole{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
-	// Watch for deletion of secondary resource ServiceAccount and requeue the owner MobileDeveloperConsole
+	// Watch for changes to secondary resource ServiceAccount and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &corev1.ServiceAccount{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
@@ -88,7 +88,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		return err
 	}
 
-	// Watch for deletion of secondary resource Service and requeue the owner MobileDeveloperConsole
+	// Watch for changes to secondary resource Service and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
@@ -106,7 +106,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		return err
 	}
 
-	// Watch for deletion of secondary resource RoleBinding and requeue the owner MobileDeveloperConsole
+	// Watch for changes to secondary resource RoleBinding and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
@@ -115,7 +115,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		return err
 	}
 
-	// Watch for deletion of secondary resource Route and requeue the owner MobileDeveloperConsole
+	// Watch for changes to secondary resource Route and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
@@ -124,7 +124,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		return err
 	}
 
-	// Watch for deletion of secondary resource DeploymentConfig and requeue the owner MobileDeveloperConsole
+	// Watch for changes to secondary resource DeploymentConfig and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &openshiftappsv1.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
@@ -133,7 +133,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		return err
 	}
 
-	// Watch for deletion of secondary resource ImageStream and requeue the owner MobileDeveloperConsole
+	// Watch for changes to secondary resource ImageStream and requeue the owner MobileDeveloperConsole
 	err = c.Watch(&source.Kind{Type: &imagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &mdcv1alpha1.MobileDeveloperConsole{},
@@ -146,17 +146,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler, autodetectChannel chan sch
 		for gvk := range autodetectChannel {
 			// Check if this channel event was for the PrometheusRule resource type
 			if gvk.String() == monitoringv1.SchemeGroupVersion.WithKind(monitoringv1.PrometheusRuleKind).String() {
-				watchSecondaryResource(c, gvk, &monitoringv1.PrometheusRule{}) // nolint
+				watchSecondaryResource(c, gvk, &monitoringv1.PrometheusRule{})
 			}
 
 			// Check if this channel event was for the ServiceMonitor resource type
 			if gvk.String() == monitoringv1.SchemeGroupVersion.WithKind(monitoringv1.ServiceMonitorsKind).String() {
-				watchSecondaryResource(c, gvk, &monitoringv1.ServiceMonitor{}) // nolint
+				watchSecondaryResource(c, gvk, &monitoringv1.ServiceMonitor{})
 			}
 
 			// Check if this channel event was for the GrafanaDashboard resource type
 			if gvk.String() == integreatlyv1alpha1.SchemeGroupVersion.WithKind(integreatlyv1alpha1.GrafanaDashboardKind).String() {
-				watchSecondaryResource(c, gvk, &integreatlyv1alpha1.GrafanaDashboard{}) // nolint
+				watchSecondaryResource(c, gvk, &integreatlyv1alpha1.GrafanaDashboard{})
 			}
 		}
 	}()

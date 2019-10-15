@@ -12,7 +12,7 @@ import (
 
 	mdcv1alpha1 "github.com/aerogear/mobile-developer-console-operator/pkg/apis/mdc/v1alpha1"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	integreatlyv1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
+	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -379,8 +379,6 @@ func newMDCServiceMonitor(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1.PrometheusRule, error) {
 	labels := map[string]string{
 		"monitoring-key": "middleware",
-		"prometheus":     "application-monitoring",
-		"role":           "alert-rules",
 	}
 	critical := map[string]string{
 		"severity": "critical",
@@ -469,20 +467,20 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 	}, nil
 }
 
-func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatlyv1.GrafanaDashboard, error) {
+func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatlyv1alpha1.GrafanaDashboard, error) {
 	labels := map[string]string{
 		"monitoring-key": "middleware",
 	}
 	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name
 	container := "mdc"
 	namespace := cr.Namespace
-	return &integreatlyv1.GrafanaDashboard{
+	return &integreatlyv1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cr.Namespace,
+			Namespace: namespace,
 			Name:      "mdc-application",
 			Labels:    labels,
 		},
-		Spec: integreatlyv1.GrafanaDashboardSpec{
+		Spec: integreatlyv1alpha1.GrafanaDashboardSpec{
 			Name: "mdcapplication.json",
 			Json: `{
 				"__requires": [
