@@ -21,7 +21,7 @@ import (
 	"github.com/aerogear/mobile-developer-console-operator/version"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	integreatlyv1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
+	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
 	openshiftappsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -169,8 +169,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Setup Scheme for Integreatly apis
-	if err := integreatlyv1.AddToScheme(mgr.GetScheme()); err != nil {
+	// Setup Scheme for Integreatly Grafana apis
+	if err := integreatlyv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
@@ -217,9 +217,6 @@ func main() {
 				log.Info("Install prometheus-operator in you cluster to create ServiceMonitor objects", "error", err.Error())
 			}
 		}
-		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
-		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
-
 	}
 
 	log.Info("Starting the Cmd.")
