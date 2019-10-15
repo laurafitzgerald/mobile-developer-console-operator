@@ -110,7 +110,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	syncperiod := time.Duration(time.Minute)
+	syncperiod := time.Duration(time.Minute * 15)
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,

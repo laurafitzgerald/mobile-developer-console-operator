@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.3.0] - 2019-09-13
+
+### Changed
+
+- Operator creates the Monitoring Resources (GrafanaDashBoard, PrometheusRule and ServiceMonitor) on creation of the MobileDeveloperConsole CR
+- Removal of the templates for the related Monitoring Resources
+
 ## [0.2.6] - 2019-09-13
 
 ### Changed
