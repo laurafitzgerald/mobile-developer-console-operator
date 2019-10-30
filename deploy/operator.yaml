@@ -40,10 +40,10 @@ spec:
             - name: OPENSHIFT_HOST
               value: "${OPENSHIFT_HOST}"  # to be filled by whoever is deploying this file
             - name: UPS_DOCUMENTATION_URL
-              value: ""
+              value: https://docs.aerogear.org/limited-availability/downstream/ups.html
             - name: IDM_DOCUMENTATION_URL
-              value: ""
+              value: https://docs.aerogear.org/limited-availability/downstream/idm.html
             - name: SYNC_DOCUMENTATION_URL
-              value: ""
+              value: https://docs.aerogear.org/limited-availability/downstream/sync.html
             - name: MSS_DOCUMENTATION_URL
-              value: ""
+              value: https://docs.aerogear.org/limited-availability/downstream/mss.html

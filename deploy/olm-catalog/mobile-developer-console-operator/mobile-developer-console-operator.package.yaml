@@ -1,0 +1,5 @@
+channels:
+- currentCSV: mobile-developer-console-operator.v0.3.0
+  name: stable
+defaultChannel: stable
+packageName: mobile-developer-console-operator

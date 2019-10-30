@@ -1,0 +1,3 @@
+crd-cr-paths:
+  - deploy/crds
+  - deploy/mdc_v1alpha1_mobileclient_crd.yaml
