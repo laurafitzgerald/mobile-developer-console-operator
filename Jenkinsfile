@@ -158,11 +158,22 @@ pipeline {
                 )
             }
         }
-        stage("Create a 'latest' tag from 'master'") {
+        stage("Create a 'dev' and 'latest' tag from 'master'") {
             when {
                 branch 'master'
             }
+            environment {
+                // qe-pipeline-library step
+                DOCKER_DEV_TAG = getDevTag()
+            }
             steps{
+                // qe-pipeline-library step
+                tagRemoteContainerImage(
+                    credentialsId: "${env.CREDENTIALS_ID}",
+                    sourceImage: "${env.OPERATOR_CONTAINER_IMAGE_NAME}",
+                    targetImage: "quay.io/aerogear/${env.OPERATOR_NAME}:${env.DOCKER_DEV_TAG}",
+                    deleteOriginalImage: false
+                )
                 // qe-pipeline-library step
                 tagRemoteContainerImage(
                     credentialsId: "${env.CREDENTIALS_ID}",
