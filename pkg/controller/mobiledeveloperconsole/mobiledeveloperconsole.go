@@ -409,6 +409,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 	}
 	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name
 	container := "mdc"
+	mdcEndpoint := fmt.Sprintf("%s-proxy", objectMetaName)
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
@@ -434,7 +435,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 							Alert: "MobileDeveloperConsoleDown",
 							Expr: intstr.IntOrString{
 								Type:   intstr.String,
-								StrVal: fmt.Sprintf("absent(kube_endpoint_address_available{endpoint=\"%s\"} >= 1)", objectMetaName),
+								StrVal: fmt.Sprintf("absent(kube_endpoint_address_available{endpoint=\"%s\"} >= 1)", mdcEndpoint),
 							},
 							For:         "5m",
 							Labels:      critical,
@@ -474,6 +475,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name
 	container := "mdc"
 	namespace := cr.Namespace
+	mdcEndpoint := fmt.Sprintf("%s-proxy", objectMetaName)
 	return &integreatlyv1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -580,7 +582,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 					"steppedLine": true,
 					"targets": [
 					  {
-						"expr": "kube_endpoint_address_available{namespace='` + namespace + `',endpoint='` + objectMetaName + `'}",
+						"expr": "kube_endpoint_address_available{namespace='` + namespace + `',endpoint='` + mdcEndpoint + `'}",
 						"format": "time_series",
 						"intervalFactor": 1,
 						"legendFormat": "MDC Application - Uptime",
@@ -697,7 +699,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						"step": 2
 					  },
 					  {
-						"expr": "kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `}",
+						"expr": "kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container='` + container + `'}",
 						"format": "time_series",
 						"hide": false,
 						"intervalFactor": 2,
@@ -706,7 +708,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						"step": 2
 					  },
 					  {
-						"expr": "((kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `})/100)*90",
+						"expr": "((kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container='` + container + `'})/100)*90",
 						"format": "time_series",
 						"hide": false,
 						"intervalFactor": 2,
@@ -803,7 +805,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						"step": 2
 					  },
 					  {
-						"expr": "(kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000",
+						"expr": "(kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container='` + container + `'})*1000",
 						"format": "time_series",
 						"interval": "",
 						"intervalFactor": 2,
@@ -812,7 +814,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						"step": 2
 					  },
 					  {
-						"expr": "(((kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000)/100)*90",
+						"expr": "(((kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container='` + container + `'})*1000)/100)*90",
 						"format": "time_series",
 						"interval": "",
 						"intervalFactor": 2,
@@ -1093,7 +1095,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						 "step": 2
 					   },
 					   {
-						 "expr": "kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `}",
+						 "expr": "kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container='` + container + `'}",
 						 "format": "time_series",
 						 "hide": false,
 						 "intervalFactor": 2,
@@ -1102,7 +1104,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						 "step": 2
 					   },
 					   {
-						 "expr": "((kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container=` + container + `})/100)*90",
+						 "expr": "((kube_pod_container_resource_limits_memory_bytes{namespace='` + namespace + `',container='` + container + `'})/100)*90",
 						 "format": "time_series",
 						 "hide": false,
 						 "intervalFactor": 2,
@@ -1199,7 +1201,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						 "step": 2
 					   },
 					   {
-						 "expr": "(kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000",
+						 "expr": "(kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container='` + container + `'})*1000",
 						 "format": "time_series",
 						 "interval": "",
 						 "intervalFactor": 2,
@@ -1208,7 +1210,7 @@ func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatl
 						 "step": 2
 					   },
 					   {
-						 "expr": "(((kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container=` + container + `})*1000)/100)*90",
+						 "expr": "(((kube_pod_container_resource_limits_cpu_cores{namespace='` + namespace + `',container='` + container + `'})*1000)/100)*90",
 						 "format": "time_series",
 						 "interval": "",
 						 "intervalFactor": 2,
