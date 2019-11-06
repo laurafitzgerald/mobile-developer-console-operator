@@ -87,17 +87,4 @@ image/build:
 image/push: image/build
 	docker push quay.io/${QUAY_ORG}/${QUAY_IMAGE}:${DEV_TAG}
 
-.PHONY: monitoring/install
-monitoring/install:
-	@echo Installing service monitor in ${NAMESPACE} :
-	- kubectl label namespace ${NAMESPACE} monitoring-key=middleware
-	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/service_monitor.yaml
-	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/prometheus_rule.yaml
-	- kubectl apply -n ${NAMESPACE} -f deploy/monitor/grafana_dashboard.yaml
-
-.PHONY: monitoring/uninstall
-monitoring/uninstall:
-	@echo Uninstalling monitor service from ${NAMESPACE} :
-	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/service_monitor.yaml
-	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/prometheus_rule.yaml
-	- kubectl delete -n ${NAMESPACE} -f deploy/monitor/grafana_dashboard.yaml
+	

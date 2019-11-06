@@ -287,34 +287,17 @@ metrics from this operator and the mobile developer console. These
 metrics can be used to generate alerts in AlertManager and a dashboard
 in Grafana.
 
-It is required that the {grafana_operator} and {prometheus_operator
+It is required that the {grafana_operator} and {prometheus_operator}
 are installed. For further details see
 {application_monitoring_operator}.
 
-The following commands will add the monitoring resources to the
-`mobile-developer-console` where the operator has been installed:
+The operator will install it's own monitoring resources required by 
+Grafana and Prometheus on startup and will install the resources 
+required for monitoring Mobile Developer Console on creation of a 
+MobileDeveloperConsole CR. 
 
-[source,shell]
-----
-make monitoring/install
-----
-
-IMPORTANT: The namespace name is hard-coded in the
-{prometheus_rule_yaml} and {grafana_dashboard_yaml}. The following is
-an example from the {prometheus_rule_yaml}. You should replace them if
-the operator is not installed in the `mobile-developer-console`
-namespace.
-
-[source,yaml]
-----
-  expr: |
-          (1-absent(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"})) or sum(kube_pod_status_ready{condition="true", namespace="mobile-developer-console"}) != 3
-
-[source,shell]
-----
-
-NOTE: The command `make monitoring/uninstall` will remove the
-monitoring resources.
+NOTE: These will be ignored if the required CRDs are not installed
+on the cluster.
 
 
 == Getting help
