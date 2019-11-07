@@ -379,6 +379,8 @@ func newMDCServiceMonitor(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1.PrometheusRule, error) {
 	labels := map[string]string{
 		"monitoring-key": "middleware",
+		"prometheus":     "application-monitoring",
+		"role":           "alert-rules",
 	}
 	critical := map[string]string{
 		"severity": "critical",
@@ -471,6 +473,7 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 func newMDCGrafanaDashboard(cr *mdcv1alpha1.MobileDeveloperConsole) (*integreatlyv1alpha1.GrafanaDashboard, error) {
 	labels := map[string]string{
 		"monitoring-key": "middleware",
+		"prometheus":     "application-monitoring",
 	}
 	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name
 	container := "mdc"

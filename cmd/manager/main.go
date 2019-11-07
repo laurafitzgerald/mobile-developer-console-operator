@@ -314,6 +314,8 @@ func serveCRMetrics(cfg *rest.Config) error {
 func reconcilePrometheusRule(promethuesRule *monitoringv1.PrometheusRule) {
 	labels := map[string]string{
 		"monitoring-key": "middleware",
+		"prometheus":     "application-monitoring",
+		"role":           "alert-rules",
 	}
 	critical := map[string]string{
 		"severity": "critical",
@@ -328,21 +330,26 @@ func reconcilePrometheusRule(promethuesRule *monitoringv1.PrometheusRule) {
 	if err != nil {
 		log.Error(err, "")
 	}
+	operatorName, err := k8sutil.GetOperatorName()
+	if err != nil {
+		log.Error(err, "")
+	}
 	promethuesRule.ObjectMeta = metav1.ObjectMeta{
 		Namespace: operatorNamespace,
 		Name:      "mdc-operator-monitoring",
 		Labels:    labels,
 	}
+	job := fmt.Sprintf("%s-metrics", operatorName)
 	promethuesRule.Spec = monitoringv1.PrometheusRuleSpec{
 		Groups: []monitoringv1.RuleGroup{
 			{
 				Name: "general.rules",
 				Rules: []monitoringv1.Rule{
 					{
-						Alert: "MobileDeveloperConsoleContainerDown",
+						Alert: "MobileDeveloperConsoleOperatorContainerDown",
 						Expr: intstr.IntOrString{
 							Type:   intstr.String,
-							StrVal: fmt.Sprintf("absent(up{job=\"mobile-developer-console-operator\"} == 1)"),
+							StrVal: fmt.Sprintf("absent(up{job=\"%s\"} == 1)", job),
 						},
 						For:         "5m",
 						Labels:      critical,
@@ -361,6 +368,7 @@ func reconcileGrafanaDashboard(grafanaDashboard *integreatlyv1alpha1.GrafanaDash
 	}
 	labels := map[string]string{
 		"monitoring-key": "middleware",
+		"prometheus":     "application-monitoring",
 	}
 	grafanaDashboard.ObjectMeta = metav1.ObjectMeta{
 		Namespace: operatorNamespace,
