@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+- Operator creates its own Monitoring Resources (GrafanaDashBoard and Prometheus Rule) on installation.
+- Removal of the templates for the related Monitoring Resources
+
 ## [0.3.0] - 2019-09-13
 
 ### Changed
