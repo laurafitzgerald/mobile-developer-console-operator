@@ -391,22 +391,22 @@ func newMDCPrometheusRule(cr *mdcv1alpha1.MobileDeveloperConsole) (*monitoringv1
 	sop_url := fmt.Sprintf("https://github.com/aerogear/mobile-developer-console-operator/blob/%s/SOP/SOP-mdc.adoc", version.Version)
 	mdcContainerDownAnnotations := map[string]string{
 		"description": "The MDC has been down for more than 5 minutes.",
-		"summary":     fmt.Sprintf("The mobile-developer-console is down."),
+		"summary":     "The mobile-developer-console is down.",
 		"sop_url":     sop_url,
 	}
 	mdcDownAnnotations := map[string]string{
 		"description": "The MDC admin console has been down for more than 5 minutes.",
-		"summary":     fmt.Sprintf("The mobile-developer-console admin console endpoint has been unavailable for more that 5 minutes."),
+		"summary":     "The mobile-developer-console admin console endpoint has been unavailable for more that 5 minutes.",
 		"sop_url":     sop_url,
 	}
 	mdcPodCPUHighAnnotations := map[string]string{
 		"description": "The MDC pod has been at 90% CPU usage for more than 5 minutes",
-		"summary":     fmt.Sprintf("The mobile-developer-console is reporting high cpu usage for more that 5 minutes."),
+		"summary":     "The mobile-developer-console is reporting high cpu usage for more that 5 minutes.",
 		"sop_url":     sop_url,
 	}
 	mdcPodMemHighAnnotations := map[string]string{
 		"description": "The MDC pod has been at 90% memory usage for more than 5 minutes",
-		"summary":     fmt.Sprintf("The mobile-developer-console is reporting high memory usage for more that 5 minutes."),
+		"summary":     "The mobile-developer-console is reporting high memory usage for more that 5 minutes.",
 		"sop_url":     sop_url,
 	}
 	objectMetaName := util.ObjectMeta(&cr.ObjectMeta, "mdc").Name

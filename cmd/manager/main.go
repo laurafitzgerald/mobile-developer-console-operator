@@ -370,6 +370,12 @@ func reconcileGrafanaDashboard(grafanaDashboard *integreatlyv1alpha1.GrafanaDash
 		"monitoring-key": "middleware",
 		"prometheus":     "application-monitoring",
 	}
+	operatorName, err := k8sutil.GetOperatorName()
+	if err != nil {
+		log.Error(err, "")
+	}
+	job := fmt.Sprintf("%s-metrics", operatorName)
+
 	grafanaDashboard.ObjectMeta = metav1.ObjectMeta{
 		Namespace: operatorNamespace,
 		Name:      "mdc-operator-monitoring",
@@ -452,7 +458,7 @@ func reconcileGrafanaDashboard(grafanaDashboard *integreatlyv1alpha1.GrafanaDash
 					"steppedLine": false,
 					"targets": [
 					{
-						"expr": "kube_endpoint_address_available{namespace='` + operatorNamespace + `',endpoint='mobile-developer-console-operator'}",
+						"expr": "kube_endpoint_address_available{namespace='` + operatorNamespace + `',endpoint='` + job + `'}",
 						"format": "time_series",
 						"hide": false,
 						"intervalFactor": 2,
@@ -554,14 +560,14 @@ func reconcileGrafanaDashboard(grafanaDashboard *integreatlyv1alpha1.GrafanaDash
 					"steppedLine": false,
 					"targets": [
 					{
-						"expr": "process_virtual_memory_bytes{namespace='` + operatorNamespace + `',job='mobile-developer-console-operator'}",
+						"expr": "process_virtual_memory_bytes{namespace='` + operatorNamespace + `',job='` + job + `'}",
 						"format": "time_series",
 						"intervalFactor": 1,
 						"legendFormat": "Virtual Memory",
 						"refId": "A"
 					},
 					{
-						"expr": "process_resident_memory_bytes{namespace='` + operatorNamespace + `',job='mobile-developer-console-operator'}",
+						"expr": "process_resident_memory_bytes{namespace='` + operatorNamespace + `',job='` + job + `'}",
 						"format": "time_series",
 						"intervalFactor": 2,
 						"legendFormat": "Memory Usage",
@@ -647,7 +653,7 @@ func reconcileGrafanaDashboard(grafanaDashboard *integreatlyv1alpha1.GrafanaDash
 					"steppedLine": false,
 					"targets": [
 					{
-						"expr": "sum(rate(process_cpu_seconds_total{namespace='` + operatorNamespace + `',job='mobile-developer-console-operator'}[1m]))*1000",
+						"expr": "sum(rate(process_cpu_seconds_total{namespace='` + operatorNamespace + `',job='` + job + `'}[1m]))*1000",
 						"format": "time_series",
 						"interval": "",
 						"intervalFactor": 2,
